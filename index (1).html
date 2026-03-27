@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>台灣 ETF 即時追蹤</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #ffffff;
+  --bg2: #f8f9fb;
+  --bg3: #f0f2f5;
+  --border: rgba(0,0,0,0.08);
+  --border2: rgba(0,0,0,0.14);
+  --text: #1a1d2e;
+  --text2: #4b5068;
+  --text3: #9399b2;
+  --accent: #3b5bdb;
+  --accent2: #2f4ac4;
+  --up: #2f9e44;
+  --up-bg: rgba(47,158,68,0.09);
+  --down: #e03131;
+  --down-bg: rgba(224,49,49,0.09);
+  --warn: #e67700;
+  --warn-bg: rgba(230,119,0,0.10);
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Noto Sans TC', sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Header */
+.header {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 0 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+}
+.logo-icon {
+  width: 28px; height: 28px;
+  background: var(--accent);
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px;
+}
+.header-right {
+  display: flex; align-items: center; gap: 12px;
+}
+.time-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text3);
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 4px 10px;
+}
+#refresh-btn {
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-family: var(--sans);
+  font-weight: 500;
+  cursor: pointer;
+  display: flex; align-items: center; gap: 6px;
+  transition: background .15s, transform .1s;
+}
+#refresh-btn:hover { background: var(--accent2); }
+#refresh-btn:active { transform: scale(0.97); }
+.spin { animation: spin .7s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Stats bar */
+.stats-bar {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+.stat-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.stat-label { font-size: 11px; color: var(--text3); margin-bottom: 4px; }
+.stat-val { font-size: 20px; font-weight: 700; font-family: var(--mono); }
+.stat-val.up { color: var(--up); }
+.stat-val.down { color: var(--down); }
+
+/* Main */
+.main { padding: 16px 24px; }
+
+/* Toolbar */
+.toolbar {
+  display: flex; gap: 8px; align-items: center;
+  margin-bottom: 12px; flex-wrap: wrap;
+}
+.search-box {
+  position: relative; flex: 1; min-width: 200px;
+}
+.search-box input {
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  border-radius: 8px;
+  padding: 8px 12px 8px 36px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: var(--sans);
+  outline: none;
+  transition: border-color .15s;
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box input::placeholder { color: var(--text3); }
+.search-icon {
+  position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+  color: var(--text3); font-size: 15px; pointer-events: none;
+}
+.pills { display: flex; gap: 5px; flex-wrap: wrap; }
+.pill {
+  padding: 6px 12px; border-radius: 20px;
+  border: 1px solid var(--border2);
+  background: transparent;
+  color: var(--text2);
+  font-size: 12px; font-family: var(--sans);
+  cursor: pointer; transition: all .15s;
+}
+.pill:hover { border-color: var(--accent); color: var(--text); }
+.pill.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+/* Tabs */
+.tabs {
+  display: flex; gap: 0;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.tab-btn {
+  padding: 9px 18px; background: none; border: none;
+  color: var(--text3); font-size: 13px; font-family: var(--sans);
+  cursor: pointer; border-bottom: 2px solid transparent;
+  margin-bottom: -1px; transition: color .15s;
+}
+.tab-btn:hover { color: var(--text2); }
+.tab-btn.active { color: var(--accent); border-bottom-color: var(--accent); font-weight: 500; }
+
+/* Table */
+.table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+table {
+  width: 100%; border-collapse: collapse;
+  font-size: 13px; table-layout: fixed;
+}
+colgroup col:nth-child(1) { width: 80px; }
+colgroup col:nth-child(2) { width: 160px; }
+colgroup col:nth-child(3) { width: 44px; }
+colgroup col:nth-child(4),
+colgroup col:nth-child(5),
+colgroup col:nth-child(6) { width: 80px; }
+colgroup col:nth-child(7) { width: 90px; }
+colgroup col:nth-child(8) { width: 80px; }
+colgroup col:nth-child(9) { width: 96px; }
+
+thead th {
+  background: var(--bg3);
+  padding: 10px 10px;
+  text-align: right;
+  color: var(--text3);
+  font-weight: 500; font-size: 11px;
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: color .15s;
+  letter-spacing: 0.3px;
+}
+thead th:hover { color: var(--text); }
+thead th:first-child { text-align: left; border-radius: 12px 0 0 0; }
+thead th:nth-child(2) { text-align: left; }
+thead th:last-child { border-radius: 0 12px 0 0; }
+.sort-icon { font-size: 9px; margin-left: 3px; opacity: .5; }
+thead th.sort-asc .sort-icon::after { content: " ▲"; opacity: 1; }
+thead th.sort-desc .sort-icon::after { content: " ▼"; opacity: 1; }
+thead th:not(.sort-asc):not(.sort-desc) .sort-icon::after { content: " ⇅"; }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background .1s;
+  animation: rowIn .2s ease both;
+}
+@keyframes rowIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+tbody tr:hover { background: rgba(0,0,0,0.025); }
+tbody tr:last-child { border-bottom: none; }
+tbody td {
+  padding: 10px 10px;
+  text-align: right;
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+tbody td:first-child {
+  text-align: left;
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--accent);
+}
+tbody td:nth-child(2) {
+  text-align: left;
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text2);
+}
+.cat-dot {
+  display: inline-block; width: 6px; height: 6px;
+  border-radius: 50%; margin-right: 6px; flex-shrink: 0;
+  vertical-align: middle; margin-top: -1px;
+}
+.up-text { color: var(--up); }
+.down-text { color: var(--down); }
+.neutral-text { color: var(--text3); }
+.badge {
+  display: inline-block; padding: 2px 7px;
+  border-radius: 5px; font-size: 11px; font-weight: 500;
+  font-family: var(--mono);
+}
+.badge-up { background: var(--up-bg); color: var(--up); }
+.badge-down { background: var(--down-bg); color: var(--down); }
+.badge-neutral { background: rgba(255,255,255,0.05); color: var(--text3); }
+
+.fav-btn {
+  background: none; border: none;
+  color: var(--text3); font-size: 14px;
+  cursor: pointer; padding: 2px 4px;
+  line-height: 1; transition: color .15s, transform .1s;
+  font-family: inherit;
+}
+.fav-btn:hover { color: var(--warn); transform: scale(1.2); }
+.fav-btn.is-fav { color: var(--warn); }
+
+.empty-state {
+  text-align: center; padding: 48px 24px;
+  color: var(--text3); font-size: 13px;
+  background: var(--bg2);
+}
+.empty-icon { font-size: 32px; margin-bottom: 10px; }
+
+/* Footer */
+.footer {
+  text-align: center; padding: 24px;
+  color: var(--text3); font-size: 11px;
+  border-top: 1px solid var(--border);
+  margin-top: 24px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .header { padding: 0 14px; }
+  .stats-bar { grid-template-columns: 1fr 1fr; padding: 10px 14px; }
+  .main { padding: 12px 14px; }
+  .toolbar { gap: 6px; }
+  .time-badge { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="logo">
+    <div class="logo-icon">📊</div>
+    台灣 ETF 追蹤器
+  </div>
+  <div class="header-right">
+    <div class="time-badge" id="ts">-- : -- : --</div>
+    <button id="refresh-btn" onclick="refresh()">
+      <span id="ref-icon">↻</span> 重新整理
+    </button>
+  </div>
+</header>
+
+<div class="stats-bar" id="stats-bar">
+  <div class="stat-card"><div class="stat-label">ETF 總數</div><div class="stat-val" id="s-total">—</div></div>
+  <div class="stat-card"><div class="stat-label">溢價 / 折價</div><div class="stat-val" id="s-prem">—</div></div>
+  <div class="stat-card"><div class="stat-label">平均折溢價%</div><div class="stat-val" id="s-avg">—</div></div>
+  <div class="stat-card"><div class="stat-label">我的最愛</div><div class="stat-val" id="s-fav">—</div></div>
+</div>
+
+<div class="main">
+  <div class="toolbar">
+    <div class="search-box">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="search" placeholder="搜尋代號或名稱…" oninput="render()">
+    </div>
+    <div class="pills" id="cat-pills"></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" onclick="setTab('all',this)">全部</button>
+    <button class="tab-btn" onclick="setTab('fav',this)">★ 最愛</button>
+    <button class="tab-btn" onclick="setTab('premium',this)">溢價中</button>
+    <button class="tab-btn" onclick="setTab('discount',this)">折價中</button>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <colgroup>
+        <col><col><col><col><col><col><col><col><col>
+      </colgroup>
+      <thead>
+        <tr>
+          <th onclick="sortBy('code')">代號<span class="sort-icon"></span></th>
+          <th onclick="sortBy('name')">名稱<span class="sort-icon"></span></th>
+          <th></th>
+          <th onclick="sortBy('nav')">淨值<span class="sort-icon"></span></th>
+          <th onclick="sortBy('price')">市價<span class="sort-icon"></span></th>
+          <th onclick="sortBy('spread')">折溢價<span class="sort-icon"></span></th>
+          <th onclick="sortBy('spreadPct')">折溢價%<span class="sort-icon"></span></th>
+          <th onclick="sortBy('chgPct')">漲跌%<span class="sort-icon"></span></th>
+          <th onclick="sortBy('vol')">成交量(張)<span class="sort-icon"></span></th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="empty" class="empty-state" style="display:none">
+      <div class="empty-icon">🔍</div>
+      沒有符合條件的 ETF
+    </div>
+  </div>
+</div>
+
+<footer class="footer">
+  台灣 ETF 追蹤器 · 資料為模擬報價，僅供參考 · 實際投資請以台灣證交所官方資料為準
+</footer>
+
+<script>
+const CATS = {
+  '股票型':'#5c7cfa','債券型':'#40c057','原物料':'#fab005',
+  '貨幣型':'#ae3ec9','不動產':'#fd7e14','槓桿反向':'#fa5252'
+};
+
+const RAW = [
+  {code:'0050',name:'元大台灣50',cat:'股票型',nav:200.45,price:200.8,vol:18432},
+  {code:'0051',name:'元大中型100',cat:'股票型',nav:48.23,price:48.10,vol:1203},
+  {code:'0052',name:'富邦科技',cat:'股票型',nav:145.67,price:146.2,vol:2341},
+  {code:'0053',name:'元大電子',cat:'股票型',nav:75.34,price:75.5,vol:892},
+  {code:'0054',name:'元大台商50',cat:'股票型',nav:31.20,price:31.15,vol:423},
+  {code:'0055',name:'元大MSCI金融',cat:'股票型',nav:22.18,price:22.25,vol:1102},
+  {code:'0056',name:'元大高股息',cat:'股票型',nav:38.72,price:39.10,vol:42310},
+  {code:'0057',name:'富邦摩台',cat:'股票型',nav:62.45,price:62.3,vol:543},
+  {code:'0058',name:'富邦發達',cat:'股票型',nav:41.33,price:41.5,vol:765},
+  {code:'0059',name:'元大台灣中小',cat:'股票型',nav:28.90,price:28.85,vol:387},
+  {code:'006201',name:'元大富櫃50',cat:'股票型',nav:19.45,price:19.5,vol:1230},
+  {code:'006204',name:'永豐臺灣加權',cat:'股票型',nav:52.60,price:52.75,vol:678},
+  {code:'00631L',name:'元大台灣50正2',cat:'槓桿反向',nav:88.20,price:88.80,vol:15632},
+  {code:'00632R',name:'元大台灣50反1',cat:'槓桿反向',nav:7.85,price:7.82,vol:9870},
+  {code:'00633L',name:'富邦台灣加權正2',cat:'槓桿反向',nav:44.30,price:44.55,vol:4210},
+  {code:'00636',name:'國泰臺灣加權報酬',cat:'股票型',nav:35.10,price:35.2,vol:2108},
+  {code:'00639',name:'富邦美國政府債',cat:'債券型',nav:38.45,price:38.50,vol:3210},
+  {code:'00641R',name:'元大美債20年反1',cat:'槓桿反向',nav:14.20,price:14.18,vol:2890},
+  {code:'00646',name:'元大S&P500',cat:'股票型',nav:52.30,price:52.5,vol:8742},
+  {code:'00648',name:'元大MSCI歐洲',cat:'股票型',nav:21.45,price:21.40,vol:445},
+  {code:'00657',name:'國泰標普低波高息',cat:'股票型',nav:16.80,price:16.85,vol:1890},
+  {code:'00662',name:'富邦NASDAQ',cat:'股票型',nav:68.90,price:69.2,vol:5678},
+  {code:'00670L',name:'富邦NASDAQ正2',cat:'槓桿反向',nav:22.50,price:22.65,vol:3421},
+  {code:'00679B',name:'元大美債20年',cat:'債券型',nav:36.20,price:36.30,vol:12430},
+  {code:'00680L',name:'元大美債20年正2',cat:'槓桿反向',nav:18.45,price:18.52,vol:4312},
+  {code:'00681B',name:'元大美債7-10年',cat:'債券型',nav:42.10,price:42.15,vol:3210},
+  {code:'00687B',name:'國泰20年美債',cat:'債券型',nav:35.60,price:35.65,vol:4520},
+  {code:'00694B',name:'富邦美國政府14+',cat:'債券型',nav:34.80,price:34.85,vol:2340},
+  {code:'00696B',name:'富邦中國政府債',cat:'債券型',nav:28.45,price:28.40,vol:876},
+  {code:'00697B',name:'元大10年IG企業債',cat:'債券型',nav:31.20,price:31.25,vol:1543},
+  {code:'00701',name:'國泰臺灣低波動30',cat:'股票型',nav:18.90,price:18.95,vol:1234},
+  {code:'00710B',name:'復華彭博高收益債',cat:'債券型',nav:24.30,price:24.35,vol:987},
+  {code:'00713',name:'元大臺灣高息低波',cat:'股票型',nav:25.40,price:25.50,vol:7890},
+  {code:'00715L',name:'期元大S&P500正2',cat:'槓桿反向',nav:32.10,price:32.25,vol:2340},
+  {code:'00720B',name:'元大投資級公司債',cat:'債券型',nav:36.80,price:36.85,vol:2108},
+  {code:'00724B',name:'群益投資級金融債',cat:'債券型',nav:29.10,price:29.15,vol:1320},
+  {code:'00728',name:'第一金工業30',cat:'股票型',nav:14.50,price:14.52,vol:543},
+  {code:'00730',name:'富邦臺灣優質高息',cat:'股票型',nav:21.30,price:21.35,vol:2341},
+  {code:'00733',name:'富邦臺灣中小A',cat:'股票型',nav:17.80,price:17.85,vol:876},
+  {code:'00739',name:'元大MSCI台灣ESG',cat:'股票型',nav:28.40,price:28.45,vol:1230},
+  {code:'00742B',name:'新光投資級公司債',cat:'債券型',nav:31.50,price:31.55,vol:987},
+  {code:'00751B',name:'元大AAA至A公司債',cat:'債券型',nav:36.20,price:36.25,vol:1543},
+  {code:'00757',name:'統一FANG+',cat:'股票型',nav:45.60,price:45.80,vol:4321},
+  {code:'00762',name:'元大全球AI',cat:'股票型',nav:16.30,price:16.40,vol:8765},
+  {code:'00770',name:'富邦全球AI',cat:'股票型',nav:22.10,price:22.15,vol:3456},
+  {code:'00772B',name:'中信高評級公司債',cat:'債券型',nav:33.40,price:33.45,vol:2108},
+  {code:'00773B',name:'中信優先金融債',cat:'債券型',nav:30.80,price:30.85,vol:1987},
+  {code:'00780B',name:'富邦全球投等債',cat:'債券型',nav:34.20,price:34.25,vol:1456},
+  {code:'00783',name:'富邦臺灣半導體',cat:'股票型',nav:32.40,price:32.50,vol:5678},
+  {code:'00830',name:'國泰費城半導體',cat:'股票型',nav:35.20,price:35.35,vol:6543},
+  {code:'00850',name:'元大臺灣ESG永續',cat:'股票型',nav:38.60,price:38.70,vol:6789},
+  {code:'00851',name:'中信美國政府債',cat:'債券型',nav:38.10,price:38.15,vol:1230},
+  {code:'00857',name:'國泰台灣ESG',cat:'股票型',nav:19.20,price:19.25,vol:2341},
+  {code:'00878',name:'國泰永續高股息',cat:'股票型',nav:21.45,price:21.60,vol:45230},
+  {code:'00881',name:'國泰台灣5G+',cat:'股票型',nav:16.80,price:16.85,vol:9870},
+  {code:'00882',name:'中信中國高股息',cat:'股票型',nav:9.20,price:9.18,vol:3210},
+  {code:'00885',name:'富邦印度',cat:'股票型',nav:18.50,price:18.60,vol:2340},
+  {code:'00891',name:'中信關鍵半導體',cat:'股票型',nav:20.30,price:20.35,vol:4321},
+  {code:'00893',name:'國泰智能電動車',cat:'股票型',nav:12.40,price:12.45,vol:2108},
+  {code:'00895',name:'富邦未來車',cat:'股票型',nav:11.20,price:11.18,vol:987},
+  {code:'00896',name:'中信綠能及電動車',cat:'股票型',nav:10.50,price:10.52,vol:1230},
+  {code:'00900',name:'富邦特選高股息30',cat:'股票型',nav:16.40,price:16.50,vol:8765},
+  {code:'00905',name:'富邦全球醫療',cat:'股票型',nav:18.90,price:18.95,vol:2341},
+  {code:'00907',name:'永豐優息存股',cat:'股票型',nav:14.20,price:14.25,vol:3456},
+  {code:'00912',name:'中信台灣智慧50',cat:'股票型',nav:15.60,price:15.65,vol:2108},
+  {code:'00915',name:'凱基優選高股息30',cat:'股票型',nav:13.80,price:13.85,vol:1987},
+  {code:'00916',name:'國泰全球品牌50',cat:'股票型',nav:12.40,price:12.45,vol:1456},
+  {code:'00919',name:'群益台灣精選高息',cat:'股票型',nav:22.30,price:22.40,vol:32100},
+  {code:'00921',name:'兆豐龍頭等權重',cat:'股票型',nav:14.10,price:14.15,vol:2341},
+  {code:'00922',name:'國泰台灣動能',cat:'股票型',nav:13.50,price:13.55,vol:1876},
+  {code:'00923',name:'群益半導體收益',cat:'股票型',nav:16.20,price:16.25,vol:4321},
+  {code:'00929',name:'復華台灣科技優息',cat:'股票型',nav:21.80,price:21.90,vol:18900},
+  {code:'00933B',name:'國泰10Y+金融債',cat:'債券型',nav:33.10,price:33.15,vol:2108},
+  {code:'00937B',name:'群益ESG投等債',cat:'債券型',nav:29.80,price:29.85,vol:1543},
+  {code:'00940',name:'元大台灣價值高息',cat:'股票型',nav:11.20,price:11.22,vol:45600},
+  {code:'00941',name:'台新臺灣IC設計',cat:'股票型',nav:13.40,price:13.45,vol:2341},
+  {code:'00943B',name:'兆豐投資級公司債',cat:'債券型',nav:31.20,price:31.25,vol:987},
+  {code:'00944',name:'群益晶片半導體',cat:'股票型',nav:15.80,price:15.85,vol:3210},
+  {code:'00945',name:'凱基全球菁英55',cat:'股票型',nav:12.30,price:12.35,vol:1234},
+  {code:'00946',name:'安聯台灣科技大壩',cat:'股票型',nav:11.80,price:11.82,vol:876},
+  {code:'00956',name:'台新臺灣高息動能',cat:'股票型',nav:10.80,price:10.82,vol:5678},
+  {code:'00958',name:'富邦AI半導體',cat:'股票型',nav:14.20,price:14.28,vol:9870},
+  {code:'00960',name:'凱基美國優先REITs',cat:'不動產',nav:16.80,price:16.85,vol:1543},
+  {code:'00965',name:'群益台美關鍵半導體',cat:'股票型',nav:11.30,price:11.33,vol:2341},
+];
+
+let etfs = RAW.map(e => {
+  const spread = +(e.price - e.nav).toFixed(2);
+  const spreadPct = +((spread / e.nav) * 100).toFixed(2);
+  const chgPct = +((Math.random() * 6 - 3)).toFixed(2);
+  return { ...e, spread, spreadPct, chgPct, fav: false };
+});
+
+let favs = new Set();
+try { favs = new Set(JSON.parse(localStorage.getItem('etf-favs') || '[]')); } catch(e) {}
+etfs.forEach(e => { if (favs.has(e.code)) e.fav = true; });
+
+let tab = 'all', cat = '全部', sortKey = 'vol', sortDir = -1;
+
+function saveFavs() {
+  try { localStorage.setItem('etf-favs', JSON.stringify([...favs])); } catch(e) {}
+}
+
+function toggleFav(code) {
+  const e = etfs.find(x => x.code === code);
+  if (!e) return;
+  e.fav = !e.fav;
+  if (e.fav) favs.add(code); else favs.delete(code);
+  saveFavs(); render();
+}
+
+function setTab(t, el) {
+  tab = t;
+  document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function setCat(c, el) {
+  cat = c;
+  document.querySelectorAll('.pill').forEach(x => x.classList.remove('active'));
+  el.classList.add('active');
+  render();
+}
+
+function sortBy(key) {
+  if (sortKey === key) sortDir *= -1; else { sortKey = key; sortDir = -1; }
+  document.querySelectorAll('thead th').forEach(th => {
+    th.classList.remove('sort-asc', 'sort-desc');
+  });
+  const map = { code: 0, name: 1, nav: 3, price: 4, spread: 5, spreadPct: 6, chgPct: 7, vol: 8 };
+  const idx = map[key];
+  if (idx !== undefined) {
+    const th = document.querySelectorAll('thead th')[idx];
+    if (th) th.classList.add(sortDir === 1 ? 'sort-asc' : 'sort-desc');
+  }
+  render();
+}
+
+function updateStats(data) {
+  const premiums = data.filter(e => e.spreadPct > 0).length;
+  const discounts = data.filter(e => e.spreadPct < 0).length;
+  const avg = data.length ? (data.reduce((a, e) => a + e.spreadPct, 0) / data.length) : 0;
+  document.getElementById('s-total').textContent = etfs.length;
+  document.getElementById('s-prem').textContent = `${premiums} / ${discounts}`;
+  const avgEl = document.getElementById('s-avg');
+  avgEl.textContent = (avg > 0 ? '+' : '') + avg.toFixed(2) + '%';
+  avgEl.className = 'stat-val ' + (avg > 0 ? 'up' : avg < 0 ? 'down' : '');
+  document.getElementById('s-fav').textContent = favs.size;
+}
+
+function render() {
+  const q = document.getElementById('search').value.toLowerCase().trim();
+  let data = etfs.filter(e => {
+    if (tab === 'fav' && !e.fav) return false;
+    if (tab === 'premium' && e.spreadPct <= 0) return false;
+    if (tab === 'discount' && e.spreadPct >= 0) return false;
+    if (cat !== '全部' && e.cat !== cat) return false;
+    if (q && !e.code.toLowerCase().includes(q) && !e.name.includes(q)) return false;
+    return true;
+  });
+  data.sort((a, b) => {
+    const av = a[sortKey], bv = b[sortKey];
+    if (typeof av === 'string') return sortDir * av.localeCompare(bv);
+    return sortDir * (av - bv);
+  });
+  updateStats(data);
+  const tbody = document.getElementById('tbody');
+  const empty = document.getElementById('empty');
+  if (!data.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = data.map((e, i) => {
+    const sp = e.spreadPct;
+    const spClass = sp > 0 ? 'up-text' : sp < 0 ? 'down-text' : 'neutral-text';
+    const bClass = sp > 0 ? 'badge-up' : sp < 0 ? 'badge-down' : 'badge-neutral';
+    const chgClass = e.chgPct > 0 ? 'up-text' : e.chgPct < 0 ? 'down-text' : 'neutral-text';
+    const dot = CATS[e.cat] || '#888';
+    return `<tr style="animation-delay:${i * 0.015}s">
+      <td>${e.code}</td>
+      <td title="${e.name}"><span class="cat-dot" style="background:${dot}"></span>${e.name}</td>
+      <td><button class="fav-btn${e.fav ? ' is-fav' : ''}" onclick="toggleFav('${e.code}')">${e.fav ? '★' : '☆'}</button></td>
+      <td>${e.nav.toFixed(2)}</td>
+      <td>${e.price.toFixed(2)}</td>
+      <td class="${spClass}">${e.spread > 0 ? '+' : ''}${e.spread.toFixed(2)}</td>
+      <td><span class="badge ${bClass}">${sp > 0 ? '+' : ''}${sp.toFixed(2)}%</span></td>
+      <td class="${chgClass}">${e.chgPct > 0 ? '+' : ''}${e.chgPct.toFixed(2)}%</td>
+      <td>${e.vol.toLocaleString()}</td>
+    </tr>`;
+  }).join('');
+}
+
+function buildPills() {
+  const cats = ['全部', ...Object.keys(CATS)];
+  document.getElementById('cat-pills').innerHTML = cats.map(c =>
+    `<button class="pill${c === cat ? ' active' : ''}" onclick="setCat('${c}',this)">${c}</button>`
+  ).join('');
+}
+
+function updateTime() {
+  const n = new Date();
+  document.getElementById('ts').textContent =
+    `${String(n.getHours()).padStart(2,'0')}:${String(n.getMinutes()).padStart(2,'0')}:${String(n.getSeconds()).padStart(2,'0')} 更新`;
+}
+
+function refresh() {
+  const icon = document.getElementById('ref-icon');
+  icon.className = 'spin';
+  etfs = etfs.map(e => {
+    const jitter = 1 + (Math.random() * 0.04 - 0.02);
+    const price = +(e.nav * jitter).toFixed(2);
+    const spread = +(price - e.nav).toFixed(2);
+    const spreadPct = +((spread / e.nav) * 100).toFixed(2);
+    const chgPct = +((Math.random() * 6 - 3)).toFixed(2);
+    return { ...e, price, spread, spreadPct, chgPct };
+  });
+  setTimeout(() => {
+    icon.className = '';
+    icon.textContent = '↻';
+    updateTime();
+    render();
+  }, 800);
+}
+
+buildPills();
+sortBy('vol');
+updateTime();
+setInterval(updateTime, 1000);
+</script>
+</body>
+</html>
