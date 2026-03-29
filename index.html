@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>台灣 ETF 全方位追蹤</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#fff;--bg2:#f7f8fa;--bg3:#eef0f5;--bg4:#e4e7f0;
+  --bdr:rgba(0,0,0,0.08);--bdr2:rgba(0,0,0,0.13);
+  --tx:#1a1d2e;--tx2:#4b5068;--tx3:#9399b2;
+  --ac:#2563eb;--ac2:#1d4ed8;
+  --up:#16a34a;--upbg:rgba(22,163,74,0.09);
+  --dn:#dc2626;--dnbg:rgba(220,38,38,0.09);
+  --warn:#d97706;--warnbg:rgba(217,119,6,0.10);
+  --purple:#7c3aed;
+  --mono:'JetBrains Mono',monospace;
+  --sans:'Noto Sans TC',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--sans);background:var(--bg);color:var(--tx);font-size:14px;min-height:100vh}
+
+.hdr{background:var(--bg);border-bottom:1px solid var(--bdr);padding:0 20px;height:54px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200}
+.logo{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:700}
+.logo-box{width:30px;height:30px;background:var(--ac);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:16px}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.ts{font-family:var(--mono);font-size:11px;color:var(--tx3);background:var(--bg3);border:1px solid var(--bdr);border-radius:6px;padding:4px 10px}
+.btn{border:none;border-radius:8px;padding:7px 15px;font-size:13px;font-family:var(--sans);font-weight:500;cursor:pointer;transition:all .15s}
+.btn-blue{background:var(--ac);color:#fff}.btn-blue:hover{background:var(--ac2)}
+.btn-outline{background:transparent;border:1px solid var(--bdr2);color:var(--tx2)}.btn-outline:hover{background:var(--bg2)}
+.spin{animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.stats{background:var(--bg2);border-bottom:1px solid var(--bdr);padding:10px 20px;display:grid;grid-template-columns:repeat(6,1fr);gap:8px}
+.sc{background:var(--bg);border:1px solid var(--bdr);border-radius:10px;padding:8px 13px}
+.sc-l{font-size:11px;color:var(--tx3);margin-bottom:2px}
+.sc-v{font-size:18px;font-weight:700;font-family:var(--mono);color:var(--tx)}
+.sc-v.up{color:var(--up)}.sc-v.dn{color:var(--dn)}.sc-v.warn{color:var(--warn)}
+
+.src-bar{padding:6px 20px;font-size:11px;color:var(--tx3);border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:6px;background:var(--bg2)}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--up);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.main{padding:14px 20px}
+.toolbar{display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center}
+.sbox{position:relative;flex:1;min-width:190px}
+.sbox input{width:100%;background:var(--bg2);border:1px solid var(--bdr2);border-radius:8px;padding:7px 12px 7px 32px;color:var(--tx);font-size:13px;font-family:var(--sans);outline:none;transition:border-color .15s}
+.sbox input:focus{border-color:var(--ac)}
+.sbox input::placeholder{color:var(--tx3)}
+.si{position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--tx3);pointer-events:none;font-size:14px}
+.pills{display:flex;gap:4px;flex-wrap:wrap}
+.pill{padding:5px 11px;border-radius:20px;border:1px solid var(--bdr2);background:transparent;color:var(--tx2);font-size:12px;font-family:var(--sans);cursor:pointer;transition:all .15s}
+.pill:hover{border-color:var(--ac);color:var(--tx)}
+.pill.on{background:var(--ac);border-color:var(--ac);color:#fff}
+.divider{width:1px;height:18px;background:var(--bdr2);margin:0 2px;align-self:center;flex-shrink:0}
+
+.tabs{display:flex;border-bottom:1px solid var(--bdr);margin-bottom:10px}
+.tab{padding:7px 15px;background:none;border:none;color:var(--tx3);font-size:13px;font-family:var(--sans);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:color .15s}
+.tab:hover{color:var(--tx2)}
+.tab.on{color:var(--ac);border-bottom-color:var(--ac);font-weight:500}
+
+/* 說明欄 */
+.info-box{background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:10px 14px;margin-bottom:10px;font-size:12px;color:#1e40af;line-height:1.7}
+.info-box b{font-weight:600}
+.info-box.warn-box{background:#fffbeb;border-color:#fde68a;color:#92400e}
+
+/* Table */
+.tw{overflow-x:auto;border:1px solid var(--bdr);border-radius:12px}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:1000px}
+
+.th-grp-row th{background:var(--bg4);padding:5px 9px;font-size:10px;font-weight:500;color:var(--tx3);letter-spacing:.4px;border-bottom:1px solid var(--bdr);text-align:center;white-space:nowrap}
+.th-grp-row th:first-child{border-radius:12px 0 0 0;text-align:left;padding-left:12px}
+.th-grp-row th:last-child{border-radius:0 12px 0 0}
+
+thead .col-row th{background:var(--bg3);padding:8px 9px;text-align:right;color:var(--tx3);font-weight:500;font-size:11px;letter-spacing:.3px;border-bottom:1px solid var(--bdr);white-space:nowrap;cursor:pointer;user-select:none;transition:color .15s}
+thead .col-row th:first-child{text-align:left;padding-left:12px}
+thead .col-row th:nth-child(2){text-align:left}
+thead .col-row th:nth-child(4){text-align:left}
+thead .col-row th:hover{color:var(--tx)}
+thead .col-row th.sa::after{content:" ▲";font-size:9px;opacity:.8}
+thead .col-row th.sd::after{content:" ▼";font-size:9px;opacity:.8}
+.grp{border-left:2px solid var(--bg4) !important}
+
+tbody tr{border-bottom:1px solid var(--bdr);transition:background .1s}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:rgba(37,99,235,0.025)}
+tbody td{padding:8px 9px;text-align:right;font-family:var(--mono);font-size:12px;color:var(--tx);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+tbody td:first-child{text-align:left;font-weight:500;color:var(--ac);padding-left:12px}
+tbody td:nth-child(2){text-align:left;font-family:var(--sans);font-size:12px;color:var(--tx2)}
+tbody td:nth-child(4){text-align:left;font-family:var(--sans);font-size:11px}
+
+.up-t{color:var(--up)}.dn-t{color:var(--dn)}.nu-t{color:var(--tx3)}.warn-t{color:var(--warn)}
+.bdg{display:inline-block;padding:2px 7px;border-radius:4px;font-size:11px;font-weight:500;font-family:var(--mono)}
+.bdg-up{background:var(--upbg);color:var(--up)}
+.bdg-dn{background:var(--dnbg);color:var(--dn)}
+.bdg-nu{background:var(--bg3);color:var(--tx3)}
+.bdg-warn{background:var(--warnbg);color:var(--warn)}
+
+.fav{background:none;border:none;cursor:pointer;font-size:14px;color:var(--tx3);padding:1px 2px;transition:color .12s,transform .1s;line-height:1}
+.fav:hover{color:var(--warn);transform:scale(1.25)}
+.fav.on{color:var(--warn)}
+.dot6{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px;vertical-align:middle;margin-top:-1px}
+
+/* 平準金 bar */
+.eq-wrap{display:flex;align-items:center;gap:5px}
+.eq-bar{height:5px;border-radius:3px;background:var(--bg4);flex:1;min-width:36px;overflow:hidden}
+.eq-fill{height:100%;border-radius:3px;transition:width .5s}
+.eq-fill.none{background:var(--up)}
+.eq-fill.mid{background:var(--warn)}
+.eq-fill.high{background:var(--dn)}
+.eq-num{font-size:11px;font-family:var(--mono);min-width:30px;text-align:right}
+
+.loading{text-align:center;padding:44px 24px;color:var(--tx2);font-size:13px;background:var(--bg2)}
+.ls{width:24px;height:24px;border:3px solid var(--bdr2);border-top-color:var(--ac);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px}
+.empty{text-align:center;padding:40px;color:var(--tx3);font-size:13px;background:var(--bg2)}
+
+.footer{text-align:center;padding:18px;color:var(--tx3);font-size:11px;border-top:1px solid var(--bdr);margin-top:20px;line-height:1.9}
+.footer a{color:var(--ac);text-decoration:none}
+
+/* 進度列 */
+.prog-bar{height:3px;background:var(--bg3);margin-bottom:10px;border-radius:2px;overflow:hidden;display:none}
+.prog-fill{height:100%;background:var(--ac);border-radius:2px;transition:width .3s}
+
+@media(max-width:700px){
+  .stats{grid-template-columns:repeat(3,1fr)}
+  .hdr,.main,.stats,.src-bar{padding-left:14px;padding-right:14px}
+  .ts{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="logo"><div class="logo-box">📊</div>台灣 ETF 全方位追蹤</div>
+  <div class="hdr-r">
+    <div class="ts" id="ts">--:--:--</div>
+    <button class="btn btn-blue" id="btn-load" onclick="startLoad()"><span id="ri">↻</span> 載入即時資料</button>
+  </div>
+</header>
+
+<div class="stats">
+  <div class="sc"><div class="sc-l">ETF 總數</div><div class="sc-v" id="s-n">—</div></div>
+  <div class="sc"><div class="sc-l">溢價中</div><div class="sc-v up" id="s-p">—</div></div>
+  <div class="sc"><div class="sc-l">折價中</div><div class="sc-v dn" id="s-d">—</div></div>
+  <div class="sc"><div class="sc-l">平均折溢價%</div><div class="sc-v" id="s-avg">—</div></div>
+  <div class="sc"><div class="sc-l">含平準金</div><div class="sc-v warn" id="s-eq">—</div></div>
+  <div class="sc"><div class="sc-l">我的最愛</div><div class="sc-v" id="s-fav">—</div></div>
+</div>
+
+<div class="src-bar">
+  <span class="live-dot"></span>
+  <span id="src-msg">資料來源：TWSE openapi（收盤價/淨值）+ e添富（配息/平準金）。點「載入即時資料」開始。</span>
+</div>
+
+<div class="main">
+  <div class="prog-bar" id="prog-bar"><div class="prog-fill" id="prog-fill" style="width:0%"></div></div>
+
+  <div class="info-box" id="info-box">
+    <b>使用說明</b>：點右上角「載入即時資料」，系統會從 <b>台灣證交所 (TWSE) openapi</b> 抓取今日收盤行情、ETF 淨值，以及 <b>e添富</b> 的最近配息平準金資料。資料完全來自官方開放 API，無需任何金鑰。
+  </div>
+
+  <div class="toolbar">
+    <div class="sbox"><span class="si">⌕</span><input type="text" id="q" placeholder="搜尋代號或名稱…" oninput="render()"></div>
+    <div class="pills" id="pills"></div>
+  </div>
+  <div class="tabs">
+    <button class="tab on"  onclick="setTab('all',this)">全部</button>
+    <button class="tab" onclick="setTab('fav',this)">★ 最愛</button>
+    <button class="tab" onclick="setTab('up',this)">溢價中</button>
+    <button class="tab" onclick="setTab('dn',this)">折價中</button>
+    <button class="tab" onclick="setTab('eq',this)">含平準金</button>
+  </div>
+
+  <div class="tw">
+    <table>
+      <thead>
+        <tr class="th-grp-row">
+          <th colspan="4" style="text-align:left">基本資訊</th>
+          <th colspan="3">收盤 / 淨值 / 折溢價</th>
+          <th colspan="2" class="grp">漲跌 / 量</th>
+          <th colspan="3" class="grp">最近配息 + 平準金</th>
+        </tr>
+        <tr class="col-row">
+          <th onclick="sb('code')">代號</th>
+          <th onclick="sb('name')">名稱</th>
+          <th></th>
+          <th onclick="sb('issuer')">投信</th>
+          <th onclick="sb('nav')">淨值</th>
+          <th onclick="sb('price')">收盤</th>
+          <th onclick="sb('spPct')">折溢價%</th>
+          <th onclick="sb('chg')" class="grp">漲跌%</th>
+          <th onclick="sb('vol')">量(張)</th>
+          <th onclick="sb('eqPct')" class="grp">平準金%</th>
+          <th onclick="sb('divAmt')">配息/單位</th>
+          <th onclick="sb('exDate')">除息日</th>
+        </tr>
+      </thead>
+      <tbody id="tbody">
+        <tr><td colspan="12" class="loading" style="padding:32px">點右上角「載入即時資料」開始</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<footer class="footer">
+  台灣 ETF 全方位追蹤 ·
+  資料來源：<a href="https://openapi.twse.com.tw" target="_blank">TWSE openapi</a>（市價、淨值）·
+  <a href="https://www.twse.com.tw/zh/ETFortune/dividendList" target="_blank">TWSE e添富</a>（配息平準金）·
+  資料僅供參考，最愛清單存於瀏覽器本機
+</footer>
+
+<script>
+/* ══════════════════════════════
+   ETF 主資料庫
+   ══════════════════════════════ */
+const ISSUER_CLR={'元大':'#2563eb','國泰':'#16a34a','富邦':'#d97706','中信':'#7c3aed',
+  '群益':'#0891b2','永豐':'#db2777','第一金':'#059669','兆豐':'#b45309',
+  '凱基':'#6d28d9','台新':'#dc2626','復華':'#0369a1','統一':'#92400e',
+  '野村':'#b91c1c','安聯':'#1d4ed8','大華':'#065f46','華南永昌':'#047857','其他':'#6b7280'};
+const CAT_CLR={'股票型':'#2563eb','債券型':'#16a34a','槓桿反向':'#dc2626','不動產':'#d97706','原物料':'#7c3aed','其他':'#6b7280'};
+
+// [代號, 名稱, 投信, 類別]
+const ETF_DB=[
+  ['0050','元大台灣50','元大','股票型'],['0051','元大中型100','元大','股票型'],
+  ['0052','富邦科技','富邦','股票型'],['0053','元大電子','元大','股票型'],
+  ['0054','元大台商50','元大','股票型'],['0055','元大MSCI金融','元大','股票型'],
+  ['0056','元大高股息','元大','股票型'],['0057','富邦摩台','富邦','股票型'],
+  ['0058','富邦發達','富邦','股票型'],['0059','元大台灣中小','元大','股票型'],
+  ['006201','元大富櫃50','元大','股票型'],['006204','永豐臺灣加權','永豐','股票型'],
+  ['00631L','元大台灣50正2','元大','槓桿反向'],['00632R','元大台灣50反1','元大','槓桿反向'],
+  ['00633L','富邦台灣加權正2','富邦','槓桿反向'],['00636','國泰臺灣加權報酬','國泰','股票型'],
+  ['00639','富邦美國政府債','富邦','債券型'],['00641R','元大美債20年反1','元大','槓桿反向'],
+  ['00642U','元大S&P石油','元大','原物料'],['00646','元大S&P500','元大','股票型'],
+  ['00648','元大MSCI歐洲','元大','股票型'],['00657','國泰標普低波高息','國泰','股票型'],
+  ['00662','富邦NASDAQ','富邦','股票型'],['00670L','富邦NASDAQ正2','富邦','槓桿反向'],
+  ['00671R','富邦NASDAQ反1','富邦','槓桿反向'],['00677U','富邦原油正2','富邦','原物料'],
+  ['00679B','元大美債20年','元大','債券型'],['00680L','元大美債20年正2','元大','槓桿反向'],
+  ['00681B','元大美債7-10年','元大','債券型'],['00687B','國泰20年美債','國泰','債券型'],
+  ['00694B','富邦美國政府14+','富邦','債券型'],['00696B','富邦中國政府債','富邦','債券型'],
+  ['00697B','元大10年IG企業債','元大','債券型'],['00700','FT台灣Smart','其他','股票型'],
+  ['00701','國泰臺灣低波動30','國泰','股票型'],['00710B','復華彭博高收益債','復華','債券型'],
+  ['00713','元大臺灣高息低波','元大','股票型'],['00715L','期元大S&P500正2','元大','槓桿反向'],
+  ['00720B','元大投資級公司債','元大','債券型'],['00724B','群益投資級金融債','群益','債券型'],
+  ['00728','第一金工業30','第一金','股票型'],['00730','富邦臺灣優質高息','富邦','股票型'],
+  ['00733','富邦臺灣中小A','富邦','股票型'],['00739','元大MSCI台灣ESG','元大','股票型'],
+  ['00742B','新光投資級公司債','其他','債券型'],['00751B','元大AAA至A公司債','元大','債券型'],
+  ['00757','統一FANG+','統一','股票型'],['00762','元大全球AI','元大','股票型'],
+  ['00770','富邦全球AI','富邦','股票型'],['00772B','中信高評級公司債','中信','債券型'],
+  ['00773B','中信優先金融債','中信','債券型'],['00780B','富邦全球投等債','富邦','債券型'],
+  ['00783','富邦臺灣半導體','富邦','股票型'],['00830','國泰費城半導體','國泰','股票型'],
+  ['00850','元大臺灣ESG永續','元大','股票型'],['00851','中信美國政府債','中信','債券型'],
+  ['00857','國泰台灣ESG','國泰','股票型'],['00858','永豐美國500大','永豐','股票型'],
+  ['00863','群益台ESG低碳50','群益','股票型'],['00868','國泰永續美國債','國泰','債券型'],
+  ['00874','安聯AI人工智慧','安聯','股票型'],['00875','國泰股利精選30','國泰','股票型'],
+  ['00877','中信特選金融','中信','股票型'],['00878','國泰永續高股息','國泰','股票型'],
+  ['00879','永豐台灣ESG','永豐','股票型'],['00881','國泰台灣5G+','國泰','股票型'],
+  ['00882','中信中國高股息','中信','股票型'],['00884','永豐台灣龍頭等權','永豐','股票型'],
+  ['00885','富邦印度','富邦','股票型'],['00886','永豐ESG低碳高息','永豐','股票型'],
+  ['00889','中信越南','中信','股票型'],['00891','中信關鍵半導體','中信','股票型'],
+  ['00893','國泰智能電動車','國泰','股票型'],['00895','富邦未來車','富邦','股票型'],
+  ['00896','中信綠能及電動車','中信','股票型'],['00900','富邦特選高股息30','富邦','股票型'],
+  ['00905','富邦全球醫療','富邦','股票型'],['00907','永豐優息存股','永豐','股票型'],
+  ['00912','中信台灣智慧50','中信','股票型'],['00915','凱基優選高股息30','凱基','股票型'],
+  ['00916','國泰全球品牌50','國泰','股票型'],['00919','群益台灣精選高息','群益','股票型'],
+  ['00921','兆豐龍頭等權重','兆豐','股票型'],['00922','國泰台灣動能','國泰','股票型'],
+  ['00923','群益半導體收益','群益','股票型'],['00929','復華台灣科技優息','復華','股票型'],
+  ['00930','永豐ESG低碳高息','永豐','股票型'],['00933B','國泰10Y+金融債','國泰','債券型'],
+  ['00937B','群益ESG投等債','群益','債券型'],['00939','統一台灣高息動能','統一','股票型'],
+  ['00940','元大台灣價值高息','元大','股票型'],['00941','台新臺灣IC設計','台新','股票型'],
+  ['00943B','兆豐投資級公司債','兆豐','債券型'],['00944','群益晶片半導體','群益','股票型'],
+  ['00945','凱基全球菁英55','凱基','股票型'],['00946','安聯台灣科技大壩','安聯','股票型'],
+  ['00954B','野村美國優先順位','野村','債券型'],['00955B','凱基AAA至A公司債','凱基','債券型'],
+  ['00956','台新臺灣高息動能','台新','股票型'],['00958','富邦AI半導體','富邦','股票型'],
+  ['00960','凱基美國優先REITs','凱基','不動產'],['00965','群益台美關鍵半導體','群益','股票型'],
+];
+const ETF_SET=new Set(ETF_DB.map(e=>e[0]));
+
+/* ══ State ══ */
+let etfs=[], favs=new Set(), curTab='all', curCat='全部', curIssuer='全部', sk='vol', sd=-1;
+try{favs=new Set(JSON.parse(localStorage.getItem('etf-favs')||'[]'));}catch(e){}
+function saveFavs(){try{localStorage.setItem('etf-favs',JSON.stringify([...favs]));}catch(e){}}
+
+/* ══ Progress ══ */
+function setProgress(pct,msg){
+  const bar=document.getElementById('prog-bar');
+  bar.style.display='block';
+  document.getElementById('prog-fill').style.width=pct+'%';
+  if(msg) document.getElementById('src-msg').textContent=msg;
+}
+function hideProgress(){document.getElementById('prog-bar').style.display='none';}
+
+/* ══ TWSE openapi — 收盤行情 ══
+   openapi.twse.com.tw 設有 CORS * 可直接存取 */
+async function fetchTWSEAll(){
+  const r=await fetch('https://openapi.twse.com.tw/v1/exchangeReport/STOCK_DAY_ALL');
+  if(!r.ok) throw new Error('TWSE STOCK_DAY_ALL failed');
+  return r.json();
+}
+
+/* ══ TWSE openapi — ETF 盤後淨值 ══ */
+async function fetchTWSENav(){
+  // 使用 openapi.twse.com.tw ETF 相關 endpoint
+  // t51: 受益憑證每日行情 (含淨值)
+  const r=await fetch('https://openapi.twse.com.tw/v1/exchangeReport/ETF_DAY');
+  if(!r.ok){
+    // 備援：抓基金每日行情
+    const r2=await fetch('https://openapi.twse.com.tw/v1/fund/ETFDividend');
+    if(r2.ok) return r2.json();
+    return [];
+  }
+  return r.json();
+}
+
+/* ══ TWSE e添富 配息清單（含平準金） ══
+   使用 JSONP-like 的官方 rwd JSON endpoint */
+async function fetchDividendList(){
+  // TWSE 配息 rwd API（有 CORS *）
+  const url='https://www.twse.com.tw/rwd/zh/fund/ETFDividend?response=json';
+  try{
+    const r=await fetch(url);
+    if(!r.ok) throw new Error('ETFDividend API failed');
+    const d=await r.json();
+    return d;
+  }catch(e){
+    // 備援：openapi endpoint
+    const r2=await fetch('https://openapi.twse.com.tw/v1/fund/ETFDividend');
+    if(r2.ok) return r2.json();
+    return null;
+  }
+}
+
+/* ══ 主載入 ══ */
+async function startLoad(){
+  const ri=document.getElementById('ri');
+  ri.className='spin'; ri.textContent='↻';
+  document.getElementById('btn-load').disabled=true;
+  document.getElementById('info-box').style.display='none';
+
+  try{
+    setProgress(10,'步驟 1/3：從 TWSE openapi 抓取今日收盤行情…');
+
+    // 1. 收盤行情
+    let allData=[];
+    try{ allData=await fetchTWSEAll(); }catch(e){ console.warn(e); }
+    setProgress(40,'步驟 2/3：抓取 ETF 淨值資料…');
+
+    // 2. ETF 淨值
+    let navData=[];
+    try{ navData=await fetchTWSENav(); }catch(e){ console.warn(e); }
+    setProgress(65,'步驟 3/3：抓取 e添富 配息平準金…');
+
+    // 3. 配息 + 平準金
+    let divData=null;
+    try{ divData=await fetchDividendList(); }catch(e){ console.warn(e); }
+    setProgress(90,'整合資料中…');
+
+    // ── 建立 priceMap（收盤、昨收、量）
+    const priceMap={};
+    if(Array.isArray(allData)){
+      allData.forEach(row=>{
+        const code=String(row['證券代號']||row.Code||row.code||'').trim();
+        if(!ETF_SET.has(code)) return;
+        const close=parseFloat(String(row['收盤價']||row['成交價']||row.ClosingPrice||'').replace(/,/g,''));
+        const open=parseFloat(String(row['開盤價']||row.OpeningPrice||'').replace(/,/g,''));
+        const prev=parseFloat(String(row['昨收價']||row.PreviousClosingPrice||'').replace(/,/g,''));
+        const vol=parseInt(String(row['成交量']||row['成交股數']||row.TradeVolume||'0').replace(/,/g,''),10);
+        const name=String(row['證券名稱']||row.Name||'').trim();
+        if(!isNaN(close)&&close>0){
+          priceMap[code]={price:close,prev:isNaN(prev)?close:prev,vol:Math.round(vol/1000),name};
+        }
+      });
+    }
+
+    // ── 建立 navMap
+    const navMap={};
+    const processNavArr=(arr)=>{
+      if(!Array.isArray(arr)) return;
+      arr.forEach(row=>{
+        const code=String(row['證券代號']||row.Code||row.code||row.StockNo||'').trim();
+        if(!code) return;
+        // 找淨值欄位
+        const nav=parseFloat(String(
+          row['每單位淨資產價值']||row['淨資產價值']||row['基金淨值']||
+          row.NAV||row.nav||row.NetAssetValue||''
+        ).replace(/,/g,''));
+        if(!isNaN(nav)&&nav>0) navMap[code]=nav;
+      });
+    };
+    processNavArr(Array.isArray(navData)?navData:(navData?.data||navData?.tables?.[0]?.data||[]));
+
+    // ── 建立 divMap（配息 + 平準金）
+    const divMap={};
+    const parseDivData=(d)=>{
+      if(!d) return;
+      let rows=[];
+      if(Array.isArray(d)) rows=d;
+      else if(d.data) rows=d.data;
+      else if(d.tables) rows=(d.tables[0]||{}).data||[];
+
+      rows.forEach(row=>{
+        const arr=Array.isArray(row)?row:Object.values(row);
+        // 欄位順序：[代號, 名稱, 除息日, 收益分配基準日, 發放日, 配息金額, 組成資訊]
+        if(arr.length<5) return;
+        const code=String(arr[0]).trim();
+        if(!ETF_SET.has(code)) return;
+        if(divMap[code]) return; // 只取最新一筆
+
+        const exDate=String(arr[2]||'').trim();
+        const divAmt=parseFloat(String(arr[5]||'').replace(/,/g,''))||null;
+        const detail=String(arr[6]||arr[5]||'');
+
+        // 解析平準金%
+        let eqPct=null;
+        const m=detail.match(/收益平準金占比[^\d]*([\d.]+)\s*%/);
+        if(m) eqPct=parseFloat(m[1]);
+
+        // 若沒抓到，嘗試另一格式
+        if(eqPct===null){
+          const m2=detail.match(/平準金[^\d]*([\d.]+)/);
+          if(m2) eqPct=parseFloat(m2[1]);
+        }
+
+        divMap[code]={exDate,divAmt,eqPct};
+      });
+    };
+    parseDivData(divData);
+
+    // ── 組合 ETF 資料
+    etfs=ETF_DB.map(([code,defName,issuer,cat])=>{
+      const pm=priceMap[code]||{};
+      const price=pm.price||null;
+      const prev=pm.prev||null;
+      const vol=pm.vol||0;
+      const nav=navMap[code]||null;
+      const dv=divMap[code]||{};
+
+      const sp=(price!=null&&nav!=null)?+(price-nav).toFixed(2):null;
+      const spPct=(sp!=null&&nav)?+(sp/nav*100).toFixed(2):null;
+      const chg=(price&&prev&&prev>0)?+((price-prev)/prev*100).toFixed(2):null;
+
+      return{code,name:pm.name||defName,issuer,cat,
+        price,prev,nav,vol,sp,spPct,chg,
+        eqPct:dv.eqPct??null,divAmt:dv.divAmt??null,exDate:dv.exDate||null,
+        fav:favs.has(code)};
+    }).filter(e=>e.price!=null||e.nav!=null);
+
+    hideProgress();
+    updateTime();
+    buildPills();
+    doSort(sk,false);
+
+    const srcMsg=`TWSE 收盤行情 ${Object.keys(priceMap).length} 筆 ｜ 淨值 ${Object.keys(navMap).length} 筆 ｜ 配息平準金 ${Object.keys(divMap).length} 筆 ｜ ${new Date().toLocaleTimeString('zh-TW')} 更新`;
+    document.getElementById('src-msg').textContent=srcMsg;
+
+  }catch(err){
+    console.error(err);
+    hideProgress();
+    document.getElementById('src-msg').textContent='⚠ 載入失敗：'+err.message+'。請確認網路連線後再試。';
+    document.getElementById('info-box').style.display='block';
+    document.getElementById('info-box').className='info-box warn-box';
+    document.getElementById('info-box').innerHTML=`<b>載入失敗</b>：${err.message}<br>請稍後再試，或確認網路可連接 openapi.twse.com.tw`;
+  }finally{
+    ri.className=''; ri.textContent='↻';
+    document.getElementById('btn-load').disabled=false;
+  }
+}
+
+/* ══ Render ══ */
+function render(){
+  const q=(document.getElementById('q').value||'').toLowerCase().trim();
+  let data=etfs.filter(e=>{
+    if(curTab==='fav'&&!e.fav) return false;
+    if(curTab==='up'&&(e.spPct==null||e.spPct<=0)) return false;
+    if(curTab==='dn'&&(e.spPct==null||e.spPct>=0)) return false;
+    if(curTab==='eq'&&(e.eqPct==null||e.eqPct<=0)) return false;
+    if(curCat!=='全部'&&e.cat!==curCat) return false;
+    if(curIssuer!=='全部'&&e.issuer!==curIssuer) return false;
+    if(q&&!e.code.toLowerCase().includes(q)&&!e.name.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  // Stats
+  const prem=data.filter(e=>e.spPct>0).length;
+  const disc=data.filter(e=>e.spPct<0).length;
+  const validSp=data.filter(e=>e.spPct!=null);
+  const avg=validSp.length?validSp.reduce((a,e)=>a+e.spPct,0)/validSp.length:0;
+  const eqN=etfs.filter(e=>e.eqPct!=null&&e.eqPct>0).length;
+  document.getElementById('s-n').textContent=etfs.length||'—';
+  document.getElementById('s-p').textContent=etfs.length?prem:'—';
+  document.getElementById('s-d').textContent=etfs.length?disc:'—';
+  const avgEl=document.getElementById('s-avg');
+  avgEl.textContent=etfs.length?(avg>=0?'+':'')+avg.toFixed(2)+'%':'—';
+  avgEl.className='sc-v '+(avg>0?'up':avg<0?'dn':'');
+  document.getElementById('s-eq').textContent=etfs.length?eqN+'支':'—';
+  document.getElementById('s-fav').textContent=favs.size||'0';
+
+  const tbody=document.getElementById('tbody');
+  if(!data.length){
+    tbody.innerHTML=etfs.length
+      ?`<tr><td colspan="12" class="empty">沒有符合條件的 ETF</td></tr>`
+      :`<tr><td colspan="12" class="loading" style="padding:32px">點右上角「載入即時資料」開始</td></tr>`;
+    return;
+  }
+
+  const f=(v,d=2)=>v!=null?v.toFixed(d):'—';
+  const pct=v=>v!=null?(v>=0?'+':'')+v.toFixed(2)+'%':'—';
+
+  tbody.innerHTML=data.map(e=>{
+    const sp=e.spPct;
+    const sCl=sp==null?'nu-t':sp>0?'up-t':'dn-t';
+    const bCl=sp==null?'bdg-nu':sp>0?'bdg-up':'bdg-dn';
+    const cCl=e.chg==null?'nu-t':e.chg>0?'up-t':'dn-t';
+    const ic=ISSUER_CLR[e.issuer]||'#888';
+    const cc=CAT_CLR[e.cat]||'#888';
+
+    // 平準金 bar
+    let eqHtml='<span class="nu-t" style="font-size:11px">—</span>';
+    if(e.eqPct!=null){
+      const cls=e.eqPct===0?'none':e.eqPct>50?'high':'mid';
+      const tc=e.eqPct===0?'up-t':e.eqPct>50?'dn-t':'warn-t';
+      eqHtml=`<div class="eq-wrap"><div class="eq-bar"><div class="eq-fill ${cls}" style="width:${Math.min(e.eqPct,100)}%"></div></div><span class="eq-num ${tc}">${e.eqPct.toFixed(1)}%</span></div>`;
+    }
+
+    return `<tr>
+      <td>${e.code}</td>
+      <td><span class="dot6" style="background:${cc}"></span>${e.name}</td>
+      <td><button class="fav${e.fav?' on':''}" onclick="toggleFav('${e.code}')">${e.fav?'★':'☆'}</button></td>
+      <td><span style="color:${ic};font-weight:500">${e.issuer}</span></td>
+      <td>${f(e.nav)}</td>
+      <td>${f(e.price)}</td>
+      <td><span class="bdg ${bCl}">${pct(sp)}</span></td>
+      <td class="${cCl} grp">${pct(e.chg)}</td>
+      <td>${e.vol.toLocaleString()}</td>
+      <td class="grp" style="min-width:110px">${eqHtml}</td>
+      <td>${f(e.divAmt,3)}</td>
+      <td style="font-size:11px;color:var(--tx3)">${e.exDate||'—'}</td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleFav(code){
+  const e=etfs.find(x=>x.code===code);if(!e)return;
+  e.fav=!e.fav;if(e.fav)favs.add(code);else favs.delete(code);
+  saveFavs();render();
+}
+function setTab(t,el){curTab=t;document.querySelectorAll('.tab').forEach(x=>x.classList.remove('on'));el.classList.add('on');render();}
+function setCat(c,el){curCat=c;document.querySelectorAll('.pill.cat').forEach(x=>x.classList.remove('on'));el.classList.add('on');render();}
+function setIssuer(v,el){curIssuer=v;document.querySelectorAll('.pill.iss').forEach(x=>x.classList.remove('on'));el.classList.add('on');render();}
+
+function sb(key){
+  if(sk===key)sd*=-1;else{sk=key;sd=-1;}
+  document.querySelectorAll('thead .col-row th').forEach(th=>{th.classList.remove('sa','sd');});
+  const map={code:0,name:1,issuer:3,nav:4,price:5,spPct:6,chg:7,vol:8,eqPct:9,divAmt:10,exDate:11};
+  const idx=map[key];
+  if(idx!=null){const th=document.querySelectorAll('thead .col-row th')[idx];if(th)th.classList.add(sd===1?'sa':'sd');}
+  doSort(key,true);
+}
+function doSort(key,rerender=true){
+  sk=key;
+  etfs.sort((a,b)=>{
+    let av=a[key],bv=b[key];
+    if(av==null)av=sd>0?1e9:-1e9;
+    if(bv==null)bv=sd>0?1e9:-1e9;
+    if(typeof av==='string')return sd*av.localeCompare(bv,'zh-TW');
+    return sd*(av-bv);
+  });
+  if(rerender)render();
+}
+
+function buildPills(){
+  const cats=['全部',...Object.keys(CAT_CLR).filter(c=>etfs.some(e=>e.cat===c))];
+  const issuers=['全部',...new Set(etfs.map(e=>e.issuer).filter(Boolean))];
+  document.getElementById('pills').innerHTML=
+    cats.map(c=>`<button class="pill cat${c===curCat?' on':''}" onclick="setCat('${c}',this)">${c}</button>`).join('')+
+    '<div class="divider"></div>'+
+    issuers.map(v=>`<button class="pill iss${v===curIssuer?' on':''}" onclick="setIssuer('${v}',this)">${v}</button>`).join('');
+}
+
+function updateTime(){
+  const n=new Date();
+  const p=x=>String(x).padStart(2,'0');
+  document.getElementById('ts').textContent=`${p(n.getHours())}:${p(n.getMinutes())}:${p(n.getSeconds())}`;
+}
+
+// 初始渲染（空白狀態）
+render();
+</script>
+</body>
+</html>
