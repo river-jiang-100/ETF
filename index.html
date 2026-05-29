@@ -171,7 +171,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 
 <script>
 /* ═══════════════════════════════════════
-   ETF 資料（含投信官網連結）
+   ETF 資料（已更新 0056 查詢網址）
    ═══════════════════════════════════════ */
 const ETF_LIST = [
   {
@@ -185,8 +185,7 @@ const ETF_LIST = [
     eqDate: '2026/05/27',
     nav: 49.18,
     links: [
-      { label: '元大官網 配息資訊', url: 'https://www.yuantaetfs.com/#/RtNav/0056' },
-      { label: '收益平準金查詢', url: 'https://www.yuantafunds.com/myfund/information/1084' },
+      { label: '收益平準金與配息查詢', url: 'https://www.yuantafunds.com/myfund/information/1084' }
     ]
   },
   {
@@ -285,7 +284,6 @@ const ETF_LIST = [
 let data = [], favs = new Set(), curTab = 'all';
 
 function init() {
-  // 從 localStorage 載入儲存的平準金數值
   try {
     const saved = JSON.parse(localStorage.getItem('etf-eq-data') || '{}');
     favs = new Set(JSON.parse(localStorage.getItem('etf-favs') || '[]'));
@@ -303,7 +301,6 @@ function init() {
     data = ETF_LIST.map(e => ({ ...e, fav: false }));
   }
 
-  // 更新時間顯示
   const saved = localStorage.getItem('etf-last-update');
   document.getElementById('last-update').textContent = saved || new Date().toLocaleString('zh-TW');
   
@@ -461,7 +458,6 @@ function buildCard(e) {
   </div>`;
 }
 
-// 初始化
 init();
 </script>
 </body>
