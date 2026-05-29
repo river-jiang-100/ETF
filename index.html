@@ -29,8 +29,6 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 .hdr-sub{font-size:12px;opacity:.75}
 .update-btn{background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:8px;padding:6px 14px;font-size:12px;font-family:var(--sans);cursor:pointer;transition:background .15s}
 .update-btn:hover{background:rgba(255,255,255,0.35)}
-.spin{animation:spin .7s linear infinite;display:inline-block}
-@keyframes spin{to{transform:rotate(360deg)}}
 
 /* Summary bar */
 .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:14px 24px;background:var(--card);border-bottom:1px solid var(--bdr)}
@@ -84,17 +82,13 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 .link-btn:hover{background:#dbeafe;color:var(--ac2)}
 .link-btn svg{width:10px;height:10px}
 
-/* 自動抓取狀態列 */
-.auto-section{padding:7px 16px 8px 22px;border-top:1px solid var(--bdr);display:flex;align-items:center;gap:8px;background:#fafafa}
-.as-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
-.as-dot.idle{background:#d1d5db}
-.as-dot.loading{background:#3b82f6;animation:pulse .8s infinite}
-.as-dot.ok{background:var(--up)}
-.as-dot.err{background:var(--dn)}
-@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
-.as-msg{font-size:11px;color:var(--tx3);flex:1}
-.btn-refetch{background:none;border:none;color:var(--ac);font-size:11px;cursor:pointer;font-family:var(--sans);padding:0}
-.btn-refetch:hover{text-decoration:underline}
+/* 手動更新區 */
+.manual-section{padding:8px 16px 10px 22px;border-top:1px dashed var(--bdr);display:flex;align-items:center;gap:8px;background:#fafafa}
+.manual-label{font-size:11px;color:var(--tx3)}
+.manual-input{width:80px;border:1px solid var(--bdr);border-radius:6px;padding:4px 8px;font-size:13px;font-family:var(--mono);color:var(--tx);outline:none;background:var(--card)}
+.manual-input:focus{border-color:var(--ac)}
+.manual-btn{background:var(--ac);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;font-family:var(--sans)}
+.manual-btn:hover{background:var(--ac2)}
 .fav-btn{background:none;border:none;font-size:18px;cursor:pointer;padding:0 4px;line-height:1;color:#d1d5db;transition:color .15s}
 .fav-btn.on{color:#f59e0b}
 .fav-btn:hover{color:#f59e0b}
@@ -123,29 +117,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 
 <div class="hdr">
   <div class="hdr-top">
-    <h1>💰 ETF 收益平準金即時追蹤</h1>
-    <button class="update-btn" id="btn-fetch" onclick="fetchAll()">
-      <span id="fetch-icon">⚡</span> 自動抓取最新數值
-    </button>
+    <h1>💰 ETF 收益平準金追蹤</h1>
+    <button class="update-btn" onclick="window.location.reload()">↻ 重新載入</button>
   </div>
-  <div class="hdr-sub" id="hdr-sub">資料截至 <span id="last-update">尚未抓取</span> ｜ 系統自動連至各投信官網解析最新平準金</div>
-</div>
-
-<!-- API Key 輸入列 -->
-<div id="api-bar" style="background:#1e3a8a;padding:8px 24px;display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-  <label style="font-size:11px;color:rgba(255,255,255,0.75);white-space:nowrap">🔑 Anthropic API Key：</label>
-  <input type="password" id="api-key" placeholder="sk-ant-api03-…"
-    style="flex:1;max-width:400px;background:rgba(255,255,255,0.12);border:1px solid rgba(255,255,255,0.3);border-radius:6px;padding:5px 11px;color:#fff;font-size:12px;font-family:var(--mono);outline:none">
-  <button onclick="saveKey()" style="background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.4);color:#fff;border-radius:6px;padding:5px 13px;font-size:11px;cursor:pointer;font-family:var(--sans)">儲存</button>
-  <button onclick="clearKey()" style="background:transparent;border:1px solid rgba(255,255,255,0.25);color:rgba(255,255,255,0.7);border-radius:6px;padding:5px 13px;font-size:11px;cursor:pointer;font-family:var(--sans)">清除</button>
-  <span style="font-size:11px;color:rgba(255,255,255,0.5)">免費申請：<a href="https://console.anthropic.com" target="_blank" style="color:rgba(255,255,255,0.8)">console.anthropic.com</a>（Key 只存本機，不外傳）</span>
-</div>
-<!-- 進度列 -->
-<div id="prog-bar" style="height:3px;background:rgba(37,99,235,0.15);display:none"><div id="prog-fill" style="height:100%;background:#60a5fa;transition:width .4s;width:0%"></div></div>
-<!-- 狀態列 -->
-<div id="status-bar" style="padding:7px 24px;font-size:11px;color:var(--tx3);background:var(--card);border-bottom:1px solid var(--bdr);display:flex;align-items:center;gap:7px">
-  <span id="sdot" style="width:7px;height:7px;border-radius:50%;background:#d1d5db;flex-shrink:0;display:inline-block"></span>
-  <span id="smsg">請輸入 Anthropic API Key 後點「自動抓取最新數值」，系統將直連各投信官網解析平準金</span>
+  <div class="hdr-sub" id="hdr-sub">資料截至 <span id="last-update">載入中…</span> ｜ 點各 ETF 下方連結前往投信官網查看最新數值</div>
 </div>
 
 <div class="summary">
@@ -306,166 +281,56 @@ const ETF_LIST = [
   },
 ];
 
-/* ════ 各 ETF 官網抓取網址 ════ */
-const FETCH_URLS = {
-  '0056':  'https://www.yuantafunds.com/myfund/information/1084',
-  '00900': 'https://www.fubon.com/asset-management/fund/info/value?Fd=94&range=3',
-  '00918': 'https://www.uobam.com.tw/fund/etf/88329556',
-  '00919': 'https://www.capitalfund.com.tw/etf/product/detail/195/trend',
-  '00907': 'https://sitc.sinopac.com/newweb/sitcFundUnitTrend/page.do?stock_id=88&tab_on=2',
-  '00878': 'https://www.cathaysite.com.tw/ETF/detail/ECN?tab=etf2',
-  '00930': 'https://sitc.sinopac.com/newweb/sitcFundUnitTrend/page.do?stock_id=B5&tab_on=2',
-};
-
 /* ════ State ════ */
 let data = [], favs = new Set(), curTab = 'all';
 
-/* ════ Init ════ */
 function init() {
+  // 從 localStorage 載入儲存的平準金數值
   try {
     const saved = JSON.parse(localStorage.getItem('etf-eq-data') || '{}');
     favs = new Set(JSON.parse(localStorage.getItem('etf-favs') || '[]'));
     data = ETF_LIST.map(e => {
       const s = saved[e.code] || {};
-      return { ...e,
-        eq:     s.eq     !== undefined ? s.eq     : e.eq,
+      return {
+        ...e,
+        eq: s.eq !== undefined ? s.eq : e.eq,
         eqDate: s.eqDate || e.eqDate,
-        nav:    s.nav    !== undefined ? s.nav    : e.nav,
-        price:  s.price  !== undefined ? s.price  : e.price,
-        fav:    favs.has(e.code),
-        status: 'idle', errMsg: ''
+        price: s.price !== undefined ? s.price : e.price,
+        fav: favs.has(e.code)
       };
     });
   } catch(err) {
-    data = ETF_LIST.map(e => ({ ...e, fav: false, status: 'idle', errMsg: '' }));
+    data = ETF_LIST.map(e => ({ ...e, fav: false }));
   }
-  const ts = localStorage.getItem('etf-last-update');
-  document.getElementById('last-update').textContent = ts || '尚未抓取';
-  const k = localStorage.getItem('etf-apikey');
-  if (k) document.getElementById('api-key').value = '（已儲存）';
-  updateStats(); render();
+
+  // 更新時間顯示
+  const saved = localStorage.getItem('etf-last-update');
+  document.getElementById('last-update').textContent = saved || new Date().toLocaleString('zh-TW');
+  
+  updateStats();
+  render();
 }
 
-/* ════ Storage ════ */
-function saveData() {
+function save() {
   const obj = {};
-  data.forEach(e => { obj[e.code] = { eq: e.eq, eqDate: e.eqDate, nav: e.nav, price: e.price }; });
+  data.forEach(e => { obj[e.code] = { eq: e.eq, eqDate: e.eqDate, price: e.price }; });
   localStorage.setItem('etf-eq-data', JSON.stringify(obj));
   localStorage.setItem('etf-favs', JSON.stringify([...favs]));
   localStorage.setItem('etf-last-update', new Date().toLocaleString('zh-TW'));
 }
-function getKey() { return localStorage.getItem('etf-apikey') || ''; }
-function saveKey() {
-  const v = document.getElementById('api-key').value.trim();
-  if (!v || v === '（已儲存）') { alert('請輸入有效 API Key'); return; }
-  localStorage.setItem('etf-apikey', v);
-  document.getElementById('api-key').value = '（已儲存）';
-  setStatus('✓ API Key 已儲存，點「自動抓取最新數值」開始', '');
-}
-function clearKey() {
-  localStorage.removeItem('etf-apikey');
-  document.getElementById('api-key').value = '';
-  setStatus('API Key 已清除', '');
-}
 
-/* ════ UI helpers ════ */
-function setStatus(msg, type) {
-  document.getElementById('smsg').textContent = msg;
-  const d = document.getElementById('sdot');
-  const colors = { live: '#16a34a', err: '#dc2626', loading: '#3b82f6' };
-  d.style.background = colors[type] || '#d1d5db';
-  d.style.animation  = (type === 'loading' || type === 'live') ? 'pulse .8s infinite' : 'none';
-}
-function setProg(w) {
-  document.getElementById('prog-bar').style.display = 'block';
-  document.getElementById('prog-fill').style.width = w + '%';
-}
-function hideProg() { document.getElementById('prog-bar').style.display = 'none'; }
-
-/* ════ Claude API + web_search 自動抓取 ════ */
-async function callClaude(code, url) {
-  const key = getKey();
-  if (!key) throw new Error('請先儲存 Anthropic API Key');
-  const prompt =
-`請用 web_search 工具抓取此網頁：${url}
-
-找到「收益平準金」數值（通常在淨值組成表格，欄位為「(B)收益平準金」）。
-回傳最新一筆，僅輸出 JSON，不要其他文字：
-{"eq":數字,"nav":淨值數字,"date":"YYYY/MM/DD"}
-找不到則：{"eq":null,"nav":null,"date":null}`;
-
-  const resp = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': key,
-      'anthropic-version': '2023-06-01',
-    },
-    body: JSON.stringify({
-      model: 'claude-sonnet-4-20250514',
-      max_tokens: 256,
-      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
-      messages: [{ role: 'user', content: prompt }]
-    })
-  });
-  if (!resp.ok) {
-    const err = await resp.json().catch(() => ({}));
-    throw new Error(err.error?.message || `HTTP ${resp.status}`);
-  }
-  const d = await resp.json();
-  const text = (d.content || []).filter(b => b.type === 'text').map(b => b.text).join('');
-  const m = text.replace(/```json|```/g, '').match(/\{[^{}]*\}/);
-  if (!m) throw new Error('無法解析回傳 JSON');
-  return JSON.parse(m[0]);
-}
-
-/* ════ 抓取單支 ════ */
-async function fetchOne(code) {
-  const idx = data.findIndex(e => e.code === code);
-  if (idx < 0 || !FETCH_URLS[code]) return;
-  data[idx].status = 'loading';
-  renderCard(data[idx]);
-  try {
-    const r = await callClaude(code, FETCH_URLS[code]);
-    if (r.eq   != null) data[idx].eq     = r.eq;
-    if (r.nav  != null) data[idx].nav    = r.nav;
-    if (r.date)         data[idx].eqDate = r.date;
-    data[idx].status = 'ok';
-    data[idx].errMsg = '';
-  } catch(e) {
-    data[idx].status = 'err';
-    data[idx].errMsg = e.message;
-  }
-  renderCard(data[idx]);
+function updateManual(code) {
+  const inp = document.getElementById('inp-' + code);
+  const val = parseFloat(inp.value);
+  if (isNaN(val) || val < 0) { alert('請輸入有效數值'); return; }
+  const e = data.find(x => x.code === code);
+  if (!e) return;
+  e.eq = val;
+  e.eqDate = new Date().toLocaleDateString('zh-TW').replace(/\//g, '/');
+  save();
+  document.getElementById('last-update').textContent = new Date().toLocaleString('zh-TW');
   updateStats();
-  saveData();
-}
-
-/* ════ 抓取全部 ════ */
-async function fetchAll() {
-  if (!getKey()) {
-    alert('請先在上方輸入 Anthropic API Key 並點「儲存」！\n免費取得：https://console.anthropic.com');
-    document.getElementById('api-key').focus();
-    return;
-  }
-  const btn = document.getElementById('btn-fetch');
-  const icon = document.getElementById('fetch-icon');
-  btn.disabled = true;
-  icon.className = 'spin'; icon.textContent = '↻';
-
-  for (let i = 0; i < data.length; i++) {
-    setProg(Math.round(i / data.length * 95));
-    setStatus(`(${i+1}/${data.length}) 正在抓取 ${data[i].code} ${data[i].name}…`, 'loading');
-    await fetchOne(data[i].code);
-    await new Promise(r => setTimeout(r, 500));
-  }
-  hideProg();
-  const ts = new Date().toLocaleString('zh-TW');
-  document.getElementById('last-update').textContent = ts;
-  localStorage.setItem('etf-last-update', ts);
-  setStatus(`✓ 全部 ${data.length} 支抓取完成 ｜ ${ts}`, 'live');
-  btn.disabled = false;
-  icon.className = ''; icon.textContent = '⚡';
+  renderCard(e);
 }
 
 function toggleFav(code) {
@@ -473,24 +338,34 @@ function toggleFav(code) {
   if (!e) return;
   e.fav = !e.fav;
   if (e.fav) favs.add(code); else favs.delete(code);
-  saveData(); updateStats(); renderCard(e);
+  save();
+  updateStats();
+  renderCard(e);
 }
+
 function setTab(t, el) {
   curTab = t;
   document.querySelectorAll('.tab-btn').forEach(x => x.classList.remove('on'));
-  el.classList.add('on'); render();
+  el.classList.add('on');
+  render();
 }
+
 function updateStats() {
-  const vals = data.map(e => e.eq).filter(v => v != null && !isNaN(v));
-  document.getElementById('s-max').textContent = vals.length ? Math.max(...vals).toFixed(2) : '—';
-  document.getElementById('s-avg').textContent = vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(2) : '—';
+  const eqVals = data.map(e => e.eq).filter(v => v != null);
+  const maxEq = eqVals.length ? Math.max(...eqVals) : 0;
+  const avgEq = eqVals.length ? eqVals.reduce((a, b) => a + b, 0) / eqVals.length : 0;
+  document.getElementById('s-max').textContent = maxEq.toFixed(2);
+  document.getElementById('s-avg').textContent = avgEq.toFixed(2);
   document.getElementById('s-fav').textContent = favs.size;
 }
+
+/* ════ Render ════ */
 function render() {
   let list = [...data];
-  if (curTab === 'fav')        list = list.filter(e => e.fav);
-  else if (curTab === 'high')  list = list.filter(e => e.eq >= 2);
-  else if (curTab === 'sort')  list = [...list].sort((a,b) => (b.eq||0)-(a.eq||0));
+  if (curTab === 'fav') list = list.filter(e => e.fav);
+  else if (curTab === 'high') list = list.filter(e => e.eq >= 2);
+  else if (curTab === 'sort') list = [...list].sort((a, b) => (b.eq || 0) - (a.eq || 0));
+
   const container = document.getElementById('main-list');
   if (!list.length) {
     container.innerHTML = `<div style="text-align:center;padding:40px;color:var(--tx3);font-size:13px;">沒有符合條件的 ETF</div>`;
@@ -498,9 +373,92 @@ function render() {
   }
   container.innerHTML = list.map(e => buildCard(e)).join('');
 }
+
 function renderCard(e) {
   const el = document.getElementById('card-' + e.code);
   if (el) el.outerHTML = buildCard(e);
+}
+
+function buildCard(e) {
+  const eq = e.eq;
+  const nav = e.nav || null;
+  const eqNavPct = (eq && nav) ? (eq / nav * 100).toFixed(2) : null;
+  const barPct = Math.min((eq / 6) * 100, 100);
+  const fillCls = eq >= 2 ? 'fill-high' : eq >= 0.5 ? 'fill-mid' : 'fill-low';
+  const amtColor = eq >= 2 ? 'var(--dn)' : eq >= 0.5 ? 'var(--warn)' : 'var(--up)';
+  const badgeBg = eq >= 2 ? '#fef2f2' : eq >= 0.5 ? '#fffbeb' : '#f0fdf4';
+  const badgeColor = eq >= 2 ? 'var(--dn)' : eq >= 0.5 ? 'var(--warn)' : 'var(--up)';
+  const sp = nav ? +(e.price - nav).toFixed(2) : null;
+  const spPct = (sp && nav) ? +(sp / nav * 100).toFixed(2) : null;
+  const chgCls = e.chgPct > 0 ? 'up' : e.chgPct < 0 ? 'dn' : '';
+
+  const linksHtml = e.links.map(l =>
+    `<a class="link-btn" href="${l.url}" target="_blank">
+      <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1h4v4M11 1L5 7M4 2H2a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V8"/></svg>
+      ${l.label}
+    </a>`
+  ).join('');
+
+  return `
+  <div class="etf-card" id="card-${e.code}">
+    <div class="card-head">
+      <div class="card-color" style="background:${e.color}"></div>
+      <div class="card-main">
+        <div class="etf-id">${e.code}</div>
+        <div class="etf-info">
+          <div class="etf-name">${e.name}</div>
+          <div class="etf-issuer">${e.issuer}</div>
+        </div>
+        <div class="metrics">
+          <div class="metric">
+            <div class="metric-label">股價</div>
+            <div class="metric-val price">${e.price.toFixed(2)}</div>
+          </div>
+          ${nav ? `<div class="metric">
+            <div class="metric-label">淨值</div>
+            <div class="metric-val price">${nav.toFixed(2)}</div>
+          </div>` : ''}
+          ${spPct != null ? `<div class="metric">
+            <div class="metric-label">折溢價%</div>
+            <div class="metric-val ${spPct > 0 ? 'up' : spPct < 0 ? 'dn' : ''}">${spPct > 0 ? '+' : ''}${spPct.toFixed(2)}%</div>
+          </div>` : ''}
+          <div class="metric">
+            <div class="metric-label">漲跌</div>
+            <div class="metric-val ${chgCls}">${e.chgPct > 0 ? '+' : ''}${e.chgPct.toFixed(2)}%</div>
+          </div>
+          <button class="fav-btn${e.fav ? ' on' : ''}" onclick="toggleFav('${e.code}')" title="${e.fav ? '移除最愛' : '加入最愛'}">${e.fav ? '★' : '☆'}</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="eq-section">
+      <div class="eq-label">收益平準金</div>
+      <div class="eq-bar-wrap">
+        <div class="eq-row-info">
+          <span class="eq-amt" style="color:${amtColor}">${eq.toFixed(2)}</span>
+          <span style="font-size:14px;color:var(--tx3);font-family:var(--mono)">元/單位</span>
+          <span class="eq-pct-badge" style="background:${badgeBg};color:${badgeColor}">
+            ${eqNavPct ? `佔淨值 ${eqNavPct}%` : ''}
+          </span>
+          <span class="eq-date">更新：${e.eqDate}</span>
+        </div>
+        <div class="eq-bar">
+          <div class="eq-fill ${fillCls}" style="width:${barPct}%"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card-links">
+      ${linksHtml}
+    </div>
+
+    <div class="manual-section">
+      <span class="manual-label">手動更新平準金：</span>
+      <input class="manual-input" type="number" step="0.01" min="0" id="inp-${e.code}" placeholder="${eq.toFixed(2)}" value="">
+      <button class="manual-btn" onclick="updateManual('${e.code}')">更新</button>
+      <span style="font-size:10px;color:var(--tx3);margin-left:4px">（從投信官網查到後填入此欄）</span>
+    </div>
+  </div>`;
 }
 
 // 初始化
