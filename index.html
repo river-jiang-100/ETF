@@ -98,7 +98,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 .edit-hint{font-size:10px;color:var(--tx3)}
 
 /* Fetch row */
-.fetch-row{padding:7px 16px 8px 21px;border-top:1px solid var(--bdr);display:flex;align-items:center;gap:8px;background:#fafafa;flex-wrap:wrap}
+.fetch-row{padding:8px 16px 9px 21px;border-top:1px solid var(--bdr);display:flex;align-items:center;gap:8px;background:#fafafa;flex-wrap:wrap}
 .fetch-status{display:flex;align-items:center;gap:5px;font-size:11px;flex:1}
 .cs-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
 .cs-dot.idle{background:#d1d5db}
@@ -108,16 +108,10 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 .cs-msg{color:var(--tx3)}
 .btn-refetch{background:none;border:none;color:var(--ac);font-size:11px;cursor:pointer;font-family:var(--sans)}
 .btn-refetch:hover{text-decoration:underline}
-.iframe-toggle{background:none;border:1px solid var(--bdr2);color:var(--tx2);font-size:11px;cursor:pointer;border-radius:6px;padding:3px 9px;font-family:var(--sans)}
-.iframe-toggle:hover{background:var(--bg)}
 
-/* iframe embed */
-.iframe-wrap{display:none;border-top:1px solid var(--bdr)}
-.iframe-wrap.open{display:block}
-.iframe-wrap iframe{width:100%;height:520px;border:none;background:#fff}
-.iframe-bar{padding:6px 16px;background:#f1f5f9;display:flex;align-items:center;justify-content:space-between;font-size:11px;color:var(--tx3)}
-.iframe-bar a{color:var(--ac);text-decoration:none}
-.iframe-close{background:none;border:none;color:var(--tx3);cursor:pointer;font-size:14px;padding:0 4px}
+.btn-link-out{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ac);text-decoration:none;background:#eff6ff;border:1px solid #bfdbfe;border-radius:6px;padding:4px 10px;font-weight:500;transition:all .15s}
+.btn-link-out:hover{background:#dbeafe;color:var(--ac2)}
+.btn-link-out svg{width:11px;height:11px}
 
 /* Legend */
 .legend{display:flex;gap:14px;align-items:center;font-size:11px;color:var(--tx3);padding:8px 24px;background:var(--card);border-bottom:1px solid var(--bdr)}
@@ -137,7 +131,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 <div class="hdr">
   <div class="hdr-left">
     <h1>💰 ETF 收益平準金即時追蹤</h1>
-    <p id="hdr-ts">點「⚡ 自動抓取」→ 元大自動解析，其他投信開內嵌視窗查看後點數字更新</p>
+    <p id="hdr-ts">點「⚡ 自動抓取」→ 元大自動解析，其他投信點「🌐 前往官網」查看後點數字更新</p>
   </div>
   <button class="btn-fetch-all" id="btn-all" onclick="fetchAll()">
     <span id="all-icon">⚡</span> 自動抓取全部
@@ -170,52 +164,52 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 <div class="cards" id="cards"></div>
 
 <footer class="footer">
-  ⚡ 元大(0056)：自動解析 HTML · 其他投信：嵌入官網視窗，看到數字後直接點卡片上的數字更新<br>
+  ⚡ 元大(0056)：自動解析 HTML ｜ 其他投信：點擊「🌐 前往官網」開新分頁，看見最新數字後直接點卡片上的數字進行修改<br>
   資料存於瀏覽器本機 · 僅供參考
 </footer>
 
 <script>
-/* ══ ETF 定義（已加入 00712 且維持 00900 最新網址） ══ */
+/* ══ ETF 定義 ══ */
 const ETF_LIST = [
   { code:'0056',  name:'元大高股息',      issuer:'元大投信', color:'#2563eb',
     price:50.15, nav:50.15, eq:4.29, eqDate:'2026/05/29',
     fetchUrl:'https://api.allorigins.win/get?url='+encodeURIComponent('https://www.yuantafunds.com/myfund/information/1084'),
-    iframeUrl:'https://www.yuantafunds.com/myfund/information/1084',
+    govUrl:'https://www.yuantafunds.com/myfund/information/1084',
     autoFetch: false
   },
   { code:'00900', name:'富邦特選高股息30', issuer:'富邦投信', color:'#d97706',
     price:18.73, nav:18.60, eq:0.65, eqDate:'2026/05/15',
-    iframeUrl:'https://websys.fsit.com.tw/FubonETF/Fund/Nav.aspx?stkId=00900',
+    govUrl:'https://websys.fsit.com.tw/FubonETF/Fund/Nav.aspx?stkId=00900',
     autoFetch: false
   },
   { code:'00712', name:'復華富時不動產',   issuer:'復華投信', color:'#0f172a',
     price:9.85, nav:9.80, eq:0.15, eqDate:'2026/05/29',
-    iframeUrl:'https://www.fhtrust.com.tw/ETF/etf_detail/ETF07#nav',
+    govUrl:'https://www.fhtrust.com.tw/ETF/etf_detail/ETF07#nav',
     autoFetch: false
   },
   { code:'00918', name:'大華優利高填息30', issuer:'大華銀投信', color:'#7c3aed',
     price:29.14, nav:29.14, eq:0.63, eqDate:'2026/05/26',
-    iframeUrl:'https://www.uobam.com.tw/fund/etf/88329556',
+    govUrl:'https://www.uobam.com.tw/fund/etf/88329556',
     autoFetch: false
   },
   { code:'00919', name:'群益台灣精選高息', issuer:'群益投信', color:'#0891b2',
     price:28.58, nav:28.50, eq:0.46, eqDate:'2026/05/20',
-    iframeUrl:'https://www.capitalfund.com.tw/etf/product/detail/195/trend',
+    govUrl:'https://www.capitalfund.com.tw/etf/product/detail/195/trend',
     autoFetch: false
   },
   { code:'00907', name:'永豐優息存股',     issuer:'永豐投信', color:'#db2777',
     price:15.07, nav:15.10, eq:0.32, eqDate:'2026/05/22',
-    iframeUrl:'https://sitc.sinopac.com/newweb/sitcFundUnitTrend/page.do?stock_id=88&tab_on=2',
+    govUrl:'https://sitc.sinopac.com/newweb/sitcFundUnitTrend/page.do?stock_id=88&tab_on=2',
     autoFetch: false
   },
   { code:'00878', name:'國泰永續高股息',   issuer:'國泰投信', color:'#16a34a',
     price:30.76, nav:30.86, eq:0.17, eqDate:'2026/05/29',
-    iframeUrl:'https://www.cathaysite.com.tw/ETF/detail/ECN?tab=etf2',
+    govUrl:'https://www.cathaysite.com.tw/ETF/detail/ECN?tab=etf2',
     autoFetch: false
   },
   { code:'00930', name:'永豐ESG低碳高息',  issuer:'永豐投信', color:'#059669',
     price:23.80, nav:23.91, eq:0.04, eqDate:'2026/05/22',
-    iframeUrl:'https://sitc.sinopac.com/newweb/sitcFundUnitTrend/page.do?stock_id=B5&tab_on=2',
+    govUrl:'https://sitc.sinopac.com/newweb/sitcFundUnitTrend/page.do?stock_id=B5&tab_on=2',
     autoFetch: false
   },
 ];
@@ -231,10 +225,10 @@ let data = [], favs = new Set(), curTab = 'all';
       const s=sv[e.code]||{};
       return{...e, eq:s.eq??e.eq, eqDate:s.eqDate||e.eqDate,
         nav:s.nav??e.nav, price:s.price??e.price,
-        fav:favs.has(e.code), status:'idle', errMsg:'', iframeOpen:false};
+        fav:favs.has(e.code), status:'idle', errMsg:''};
     });
   }catch(err){
-    data = ETF_LIST.map(e=>({...e,fav:false,status:'idle',errMsg:'',iframeOpen:false}));
+    data = ETF_LIST.map(e=>({...e,fav:false,status:'idle',errMsg:''}));
   }
   document.getElementById('s-n').textContent = data.length;
   updateStats(); render();
@@ -282,22 +276,15 @@ async function fetchAll(){
       setStatus(`(${i+1}/${data.length}) 自動抓取 ${autoList[i].code}…`,'loading');
       const ok = await autoFetch(autoList[i].code);
       autoList[i].status = ok?'ok':'err';
-      autoList[i].errMsg = ok?'':'自動解析失敗，請手動查看';
+      autoList[i].errMsg = ok?'':'自動解析失敗';
       renderCard(autoList[i]);
     }
-    setStatus(`元大已更新 ✓ 其他支已展開官網視窗，請查看後點數字更新`,'ok');
+    setStatus(`元大已更新 ✓ 其他投信請點擊「前往官網」查看並手動修改金額`,'ok');
   } else {
-    setStatus(`請手動點選下方「🔍 查看官網」視窗，並於看見數字後點選左方金額修改。`,'ok');
+    setStatus(`請點選下方「🌐 前往官網」開新分頁查看，並於看見數字後點選左方金額直接修改。`,'ok');
   }
 
-  const manualList = data.filter(e=>!e.autoFetch);
   setProg(100);
-  manualList.forEach(e=>{
-    e.iframeOpen=true;
-    e.status='idle';
-    renderCard(e);
-  });
-
   setTimeout(hideProg, 1000);
   saveData(); updateStats();
   const ts=new Date().toLocaleString('zh-TW');
@@ -322,16 +309,11 @@ function saveEdit(code){
   if(isNaN(v)||v<0){inp.focus();return;}
   const e=data.find(x=>x.code===code);if(!e)return;
   e.eq=v; e.eqDate=new Date().toLocaleDateString('zh-TW');
-  e.status='ok'; e.iframeOpen=false;
+  e.status='ok';
   saveData(); updateStats(); renderCard(e);
 }
 function cancelEdit(code){
   renderCard(data.find(x=>x.code===code));
-}
-function toggleIframe(code){
-  const e=data.find(x=>x.code===code);if(!e)return;
-  e.iframeOpen=!e.iframeOpen;
-  renderCard(e);
 }
 function toggleFav(code){
   const e=data.find(x=>x.code===code);if(!e)return;
@@ -381,7 +363,7 @@ function buildCard(e){
   const spPct=sp&&nav?+(sp/nav*100).toFixed(2):null;
   const spCl=spPct==null?'':spPct>0?'style="color:var(--up)"':'style="color:var(--dn)"';
   const stMap={idle:'idle',loading:'loading',ok:'ok',err:'err'};
-  const stMsg={idle:'點「查看官網」後輸入數值',loading:'自動抓取中…',ok:'已更新 ✓',err:e.errMsg||'請手動查看'};
+  const stMsg={idle:'可手動更新數值',loading:'自動抓取中…',ok:'已更新 ✓',err:e.errMsg||'無法解析'};
 
   return `<div class="etf-card" id="c-${e.code}">
     <div class="card-top">
@@ -390,7 +372,7 @@ function buildCard(e){
         <div class="etf-code">${e.code}</div>
         <div class="etf-meta">
           <div class="etf-name">${e.name}</div>
-          <div class="etf-issuer">${e.issuer}${e.autoFetch?' <span style="font-size:10px;background:#dbeafe;color:#1d4ed8;padding:1px 5px;border-radius:4px;margin-left:3px">自動</span>':' <span style="font-size:10px;background:#fef9c3;color:#854d0e;padding:1px 5px;border-radius:4px;margin-left:3px">內嵌視窗</span>'}</div>
+          <div class="etf-issuer">${e.issuer}${e.autoFetch?' <span style="font-size:10px;background:#dbeafe;color:#1d4ed8;padding:1px 5px;border-radius:4px;margin-left:3px">自動</span>':' <span style="font-size:10px;background:#fef9c3;color:#854d0e;padding:1px 5px;border-radius:4px;margin-left:3px">手動</span>'}</div>
         </div>
         <div class="card-prices">
           ${nav?`<div class="price-blk"><div class="price-lbl">預設淨值</div><div class="price-val">${nav.toFixed(2)}</div></div>`:''}
@@ -426,20 +408,15 @@ function buildCard(e){
     </div>
 
     <div class="fetch-row">
-      <button class="iframe-toggle" onclick="toggleIframe('${e.code}')">${e.iframeOpen?'▲ 收起官網':'🔍 查看官網'}</button>
+      <a class="btn-link-out" href="${e.govUrl}" target="_blank">
+        🌐 前往官網
+        <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1h4v4M11 1L5 7M4 2H2a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V8"/></svg>
+      </a>
       <div class="fetch-status">
         <span class="cs-dot ${stMap[e.status||'idle']}"></span>
         <span class="cs-msg">${stMsg[e.status||'idle']}</span>
       </div>
       ${e.autoFetch ? `<button class="btn-refetch" onclick="fetchOne('${e.code}')">↻ 重新抓取</button>` : ''}
-    </div>
-
-    <div class="iframe-wrap${e.iframeOpen?' open':''}">
-      <div class="iframe-bar">
-        <span>📎 投信官網：<a href="${e.iframeUrl}" target="_blank">${e.iframeUrl}</a></span>
-        <button class="iframe-close" onclick="toggleIframe('${e.code}')">✕ 收起</button>
-      </div>
-      ${e.iframeOpen?`<iframe src="${e.iframeUrl}" loading="lazy" sandbox="allow-scripts allow-same-origin allow-forms"></iframe>`:''}
     </div>
   </div>`;
 }
@@ -449,7 +426,7 @@ async function fetchOne(code){
   e.status='loading'; renderCard(e);
   const ok=await autoFetch(code);
   e.status=ok?'ok':'err';
-  e.errMsg=ok?'':'HTML 解析失敗，請手動查看官網';
+  e.errMsg=ok?'':'自動解析失敗';
   saveData(); updateStats(); renderCard(e);
 }
 </script>
