@@ -49,7 +49,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 .tab.on{color:var(--ac);border-bottom-color:var(--ac);font-weight:500}
 
 /* Cards */
-.cards{padding:14px 24px;display:flex;flex-direction:column;gap:12px}
+.cards{padding:14px 24px;display:flex;flex-direction:column;gap:12px;min-height:200px}
 
 .etf-card{background:var(--card);border-radius:14px;overflow:hidden;border:1px solid var(--bdr);transition:box-shadow .15s}
 .etf-card:hover{box-shadow:0 4px 20px rgba(37,99,235,0.10)}
@@ -144,7 +144,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 <div class="stats">
   <div class="sc"><div class="sc-l">追蹤 ETF</div><div class="sc-v" id="s-n" style="color:var(--ac)">13</div></div>
   <div class="sc"><div class="sc-l">最高平準金</div><div class="sc-v" id="s-max" style="color:var(--dn)">—</div></div>
-  <div class="sc"><div class="sc-l">平均平準金</div><div class="sc-v" id="s-warn">—</div></div>
+  <div class="sc"><div class="sc-l">平均平準金</div><div class="sc-v" id="s-avg" style="color:var(--warn)">—</div></div>
   <div class="sc"><div class="sc-l">最愛</div><div class="sc-v" id="s-fav" style="color:var(--up)">0</div></div>
 </div>
 
@@ -169,7 +169,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 </footer>
 
 <script>
-/* ══ ETF 定義（精準替換為 image_8f1bb9.png 中的 5 支新自選股） ══ */
+/* ══ ETF 自選名單定義 ══ */
 const ETF_LIST = [
   { code:'0056',  name:'元大高股息',      issuer:'元大投信', color:'#2563eb',
     price:50.15, nav:50.15, eq:4.29, eqDate:'2026/05/29',
@@ -177,7 +177,7 @@ const ETF_LIST = [
     govUrl:'https://www.yuantafunds.com/myfund/information/1084',
     autoFetch: false
   },
-  { code:'00900', name:'富邦特選高股息30', issuer:'富邦投信', color:'#d97706',
+  { code:'00900', name:'富邦特選高股息30', issuer:'富邦投信', color:#d97706',
     price:18.73, nav:18.60, eq:0.65, eqDate:'2026/05/15',
     govUrl:'https://websys.fsit.com.tw/FubonETF/Fund/Nav.aspx?stkId=00900',
     autoFetch: false
@@ -212,7 +212,7 @@ const ETF_LIST = [
     govUrl:'https://sitc.sinopac.com/newweb/sitcFundUnitTrend/page.do?stock_id=B5&tab_on=2',
     autoFetch: false
   },
-  /* ─── 以下為此次圖片精準新增之債券型自選 ─── */
+  /* ─── 債券型自選 ─── */
   { code:'00937B', name:'群益ESG投等債20+', issuer:'群益投信', color:'#0891b2',
     price:15.82, nav:15.80, eq:0.12, eqDate:'2026/05/29',
     govUrl:'https://www.capitalfund.com.tw/etf/product/detail/205/trend',
@@ -254,9 +254,11 @@ let data = [], favs = new Set(), curTab = 'all';
         fav:favs.has(e.code), status:'idle', errMsg:''};
     });
   }catch(err){
+    console.error("Init Error:", err);
     data = ETF_LIST.map(e=>({...e,fav:false,status:'idle',errMsg:''}));
   }
-  document.getElementById('s-n').textContent = data.length;
+  const totalEl = document.getElementById('s-n');
+  if(totalEl) totalEl.textContent = data.length;
   updateStats(); render();
 })();
 
@@ -267,7 +269,7 @@ function saveData(){
   localStorage.setItem('etf-favs',JSON.stringify([...favs]));
 }
 
-/* ══ 自動抓取（元大系列預留） ══ */
+/* ══ 自動抓取邏輯 ══ */
 async function autoFetch(code){
   const e=data.find(x=>x.code===code);
   if(!e||!e.autoFetch) return false;
@@ -295,9 +297,9 @@ async function fetchAll(){
 
   const autoList = data.filter(e=>e.autoFetch);
   if(autoList.length > 0) {
-    for(let i=0;i<autoList.length;i++){
-      setProg(Math.round((i/data.length)*60));
-      setStatus(`(${i+1}/${data.length}) 自動抓取 ${autoList[i].code}…`,'loading');
+    for(let i=0; i<autoList.length; i++){
+      setProg(Math.round((i/autoList.length)*60));
+      setStatus(`(${i+1}/${autoList.length}) 自動抓取 ${autoList[i].code}…`,'loading');
       const ok = await autoFetch(autoList[i].code);
       autoList[i].status = ok?'ok':'err';
       autoList[i].errMsg = ok?'':'自動解析失敗';
@@ -318,7 +320,17 @@ async function fetchAll(){
   document.getElementById('all-icon').textContent='⚡';
 }
 
-/* ══ Edit ══ */
+/* ══ 單獨抓取功能 ══ */
+async function fetchOne(code){
+  const e=data.find(x=>x.code===code);if(!e)return;
+  e.status='loading'; renderCard(e);
+  const ok=await autoFetch(code);
+  e.status=ok?'ok':'err';
+  e.errMsg=ok?'':'自動解析失敗';
+  saveData(); updateStats(); renderCard(e);
+}
+
+/* ══ Edit 編輯功能 ══ */
 function startEdit(code){
   const e=data.find(x=>x.code===code);if(!e)return;
   document.getElementById('en-'+code).style.display='none';
@@ -350,26 +362,38 @@ function setTab(t,el){
 }
 function setProg(w){document.getElementById('prog').style.display='block';document.getElementById('prog-fill').style.width=w+'%';}
 function hideProg(){document.getElementById('prog').style.display='none';}
+
 function setStatus(msg,type){
-  document.getElementById('smsg').textContent=msg;
+  const smsg = document.getElementById('smsg');
+  if(smsg) smsg.textContent=msg;
   const d=document.getElementById('sdot');
-  const c={ok:'#16a34a',loading:'#3b82f6',err:'#dc2626'};
-  d.style.background=c[type]||'#d1d5db';
-  d.style.animation=(type==='loading'||type==='ok')?'pulse .8s infinite':'none';
-}
-function updateStats(){
-  const v=data.map(e=>e.eq).filter(x=>x!=null&&!isNaN(x));
-  document.getElementById('s-max').textContent=v.length?Math.max(...v).toFixed(2):'—';
-  document.getElementById('s-avg').textContent=v.length?(v.reduce((a,b)=>a+b,0)/v.length).toFixed(2):'—';
-  document.getElementById('s-fav').textContent=favs.size;
+  if(d) {
+    const c={ok:'#16a34a',loading:'#3b82f6',err:'#dc2626'};
+    d.style.background=c[type]||'#d1d5db';
+    d.style.animation=(type==='loading'||type==='ok')?'pulse .8s infinite':'none';
+  }
 }
 
-/* ══ Render ══ */
+function updateStats(){
+  const v=data.map(e=>e.eq).filter(x=>x!=null&&!isNaN(x));
+  const maxEl = document.getElementById('s-max');
+  const avgEl = document.getElementById('s-avg');
+  const favEl = document.getElementById('s-fav');
+  if(maxEl) maxEl.textContent=v.length?Math.max(...v).toFixed(2):'—';
+  if(avgEl) avgEl.textContent=v.length?(v.reduce((a,b)=>a+b,0)/v.length).toFixed(2):'—';
+  if(favEl) favEl.textContent=favs.size;
+}
+
+/* ══ Render 畫面渲染 ══ */
 function render(){
   let list=[...data];
   if(curTab==='fav')list=list.filter(e=>e.fav);
   else if(curTab==='sort')list=[...list].sort((a,b)=>(b.eq||0)-(a.eq||0));
-  document.getElementById('cards').innerHTML=list.map(buildCard).join('');
+  
+  const cardsContainer = document.getElementById('cards');
+  if(cardsContainer) {
+    cardsContainer.innerHTML=list.map(buildCard).join('');
+  }
 }
 function renderCard(e){
   const el=document.getElementById('c-'+e.code);
@@ -443,15 +467,6 @@ function buildCard(e){
       ${e.autoFetch ? `<button class="btn-refetch" onclick="fetchOne('${e.code}')">↻ 重新抓取</button>` : ''}
     </div>
   </div>`;
-}
-
-async function fetchOne(code){
-  const e=data.find(x=>x.code===code);if(!e)return;
-  e.status='loading'; renderCard(e);
-  const ok=await autoFetch(code);
-  e.status=ok?'ok':'err';
-  e.errMsg=ok?'':'自動解析失敗';
-  saveData(); updateStats(); renderCard(e);
 }
 </script>
 </body>
