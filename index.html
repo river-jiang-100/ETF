@@ -169,15 +169,15 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 </footer>
 
 <script>
-/* ══ ETF 自選名單定義 ══ */
+/* ══ ETF 13檔完整名單定義 ══ */
 const ETF_LIST = [
   { code:'0056',  name:'元大高股息',      issuer:'元大投信', color:'#2563eb',
     price:50.15, nav:50.15, eq:4.29, eqDate:'2026/05/29',
     fetchUrl:'https://api.allorigins.win/get?url='+encodeURIComponent('https://www.yuantafunds.com/myfund/information/1084'),
     govUrl:'https://www.yuantafunds.com/myfund/information/1084',
-    autoFetch: false
+    autoFetch: true
   },
-  { code:'00900', name:'富邦特選高股息30', issuer:'富邦投信', color:#d97706',
+  { code:'00900', name:'富邦特選高股息30', issuer:'富邦投信', color:'#d97706',
     price:18.73, nav:18.60, eq:0.65, eqDate:'2026/05/15',
     govUrl:'https://websys.fsit.com.tw/FubonETF/Fund/Nav.aspx?stkId=00900',
     autoFetch: false
@@ -212,28 +212,28 @@ const ETF_LIST = [
     govUrl:'https://sitc.sinopac.com/newweb/sitcFundUnitTrend/page.do?stock_id=B5&tab_on=2',
     autoFetch: false
   },
-  /* ─── 債券型自選 ─── */
-  { code:'00937B', name:'群益ESG投等債20+', issuer:'群益投信', color:'#0891b2',
+  /* ─── 債券型追加 ─── */
+  { code:'00937B', name:'群益ESG投等債20+', issuer:'群益投信', color:'#0284c7',
     price:15.82, nav:15.80, eq:0.12, eqDate:'2026/05/29',
     govUrl:'https://www.capitalfund.com.tw/etf/product/detail/205/trend',
     autoFetch: false
   },
-  { code:'00981B', name:'富邦美債20年', issuer:'富邦投信', color:'#d97706',
+  { code:'00981B', name:'富邦美債20年', issuer:'富邦投信', color:'#4f46e5',
     price:14.90, nav:14.88, eq:0.00, eqDate:'2026/05/29',
     govUrl:'https://websys.fsit.com.tw/FubonETF/Fund/Nav.aspx?stkId=00981B',
     autoFetch: false
   },
-  { code:'00981D', name:'富邦美債20年-配息', issuer:'富邦投信', color:'#dc2626',
+  { code:'00981D', name:'富邦美債20年-配息', issuer:'富邦投信', color:'#9333ea',
     price:14.92, nav:14.90, eq:0.00, eqDate:'2026/05/29',
     govUrl:'https://websys.fsit.com.tw/FubonETF/Fund/Nav.aspx?stkId=00981D',
     autoFetch: false
   },
-  { code:'00984B', name:'群益20年美債', issuer:'群益投信', color:'#b91c1c',
+  { code:'00984B', name:'群益20年美債', issuer:'群益投信', color:'#ea580c',
     price:14.95, nav:14.93, eq:0.00, eqDate:'2026/05/29',
     govUrl:'https://www.capitalfund.com.tw/etf/product/detail/225/trend',
     autoFetch: false
   },
-  { code:'00984D', name:'群益20年美債-配息', issuer:'群益投信', color:'#1e1b4b',
+  { code:'00984D', name:'群益20年美債-配息', issuer:'群益投信', color:'#be123c',
     price:14.96, nav:14.94, eq:0.00, eqDate:'2026/05/29',
     govUrl:'https://www.capitalfund.com.tw/etf/product/detail/226/trend',
     autoFetch: false
@@ -269,7 +269,7 @@ function saveData(){
   localStorage.setItem('etf-favs',JSON.stringify([...favs]));
 }
 
-/* ══ 自動抓取邏輯 ══ */
+/* ══ 自動抓取邏輯（元大） ══ */
 async function autoFetch(code){
   const e=data.find(x=>x.code===code);
   if(!e||!e.autoFetch) return false;
@@ -293,19 +293,19 @@ async function fetchAll(){
   document.getElementById('btn-all').disabled=true;
   document.getElementById('all-icon').className='spin';
   document.getElementById('all-icon').textContent='↻';
-  setProg(0); setStatus('檢查並更新資料中…','loading');
+  setProg(0); setStatus('自動抓取元大資料中…','loading');
 
   const autoList = data.filter(e=>e.autoFetch);
   if(autoList.length > 0) {
     for(let i=0; i<autoList.length; i++){
-      setProg(Math.round((i/autoList.length)*60));
+      setProg(Math.round((i/autoList.length)*50));
       setStatus(`(${i+1}/${autoList.length}) 自動抓取 ${autoList[i].code}…`,'loading');
       const ok = await autoFetch(autoList[i].code);
       autoList[i].status = ok?'ok':'err';
       autoList[i].errMsg = ok?'':'自動解析失敗';
       renderCard(autoList[i]);
     }
-    setStatus(`更新完成 ✓ 請點擊「前往官網」查看並手動修改其他金額`,'ok');
+    setStatus(`元大更新完成 ✓ 請點擊其他投信的「🌐 前往官網」查看並手動修正金額`,'ok');
   } else {
     setStatus(`請點選卡片下方的「🌐 前往官網」開新分頁查看，並點選左方金額直接修改。`,'ok');
   }
@@ -320,7 +320,7 @@ async function fetchAll(){
   document.getElementById('all-icon').textContent='⚡';
 }
 
-/* ══ 單獨抓取功能 ══ */
+/* ══ 單獨重新抓取 ══ */
 async function fetchOne(code){
   const e=data.find(x=>x.code===code);if(!e)return;
   e.status='loading'; renderCard(e);
@@ -330,7 +330,7 @@ async function fetchOne(code){
   saveData(); updateStats(); renderCard(e);
 }
 
-/* ══ Edit 編輯功能 ══ */
+/* ══ 數字點擊修改功能 ══ */
 function startEdit(code){
   const e=data.find(x=>x.code===code);if(!e)return;
   document.getElementById('en-'+code).style.display='none';
@@ -411,7 +411,7 @@ function buildCard(e){
   const spPct=sp&&nav?+(sp/nav*100).toFixed(2):null;
   const spCl=spPct==null?'':spPct>0?'style="color:var(--up)"':'style="color:var(--dn)"';
   const stMap={idle:'idle',loading:'loading',ok:'ok',err:'err'};
-  const stMsg={idle:'可手動更新數值',loading:'自動抓取中…',ok:'已更新 ✓',err:e.errMsg||'無法解析'};
+  const stMsg={idle:'可點擊金額手動更新',loading:'自動抓取中…',ok:'已更新 ✓',err:e.errMsg||'無法解析'};
 
   return `<div class="etf-card" id="c-${e.code}">
     <div class="card-top">
@@ -457,7 +457,7 @@ function buildCard(e){
 
     <div class="fetch-row">
       <a class="btn-link-out" href="${e.govUrl}" target="_blank">
-        🌐 前往官網
+        🌐 前往官網查詢
         <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M7 1h4v4M11 1L5 7M4 2H2a1 1 0 00-1 1v7a1 1 0 001 1h7a1 1 0 001-1V8"/></svg>
       </a>
       <div class="fetch-status">
