@@ -142,9 +142,9 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 <div class="status-bar"><span class="sdot" id="sdot"></span><span id="smsg">就緒，點「⚡ 自動抓取全部」開始</span></div>
 
 <div class="stats">
-  <div class="sc"><div class="sc-l">追蹤 ETF</div><div class="sc-v" id="s-n" style="color:var(--ac)">8</div></div>
+  <div class="sc"><div class="sc-l">追蹤 ETF</div><div class="sc-v" id="s-n" style="color:var(--ac)">13</div></div>
   <div class="sc"><div class="sc-l">最高平準金</div><div class="sc-v" id="s-max" style="color:var(--dn)">—</div></div>
-  <div class="sc"><div class="sc-l">平均平準金</div><div class="sc-v" id="s-avg" style="color:var(--warn)">—</div></div>
+  <div class="sc"><div class="sc-l">平均平準金</div><div class="sc-v" id="s-warn">—</div></div>
   <div class="sc"><div class="sc-l">最愛</div><div class="sc-v" id="s-fav" style="color:var(--up)">0</div></div>
 </div>
 
@@ -164,12 +164,12 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 <div class="cards" id="cards"></div>
 
 <footer class="footer">
-  ⚡ 元大(0056)：自動解析 HTML ｜ 其他投信：點擊「🌐 前往官網」開新分頁，看見最新數字後直接點卡片上的數字進行修改<br>
+  ⚡ 元大系列：自動解析 HTML ｜ 其他投信：點擊「🌐 前往官網」開新分頁，看見最新數字後直接點卡片上的數字進行修改<br>
   資料存於瀏覽器本機 · 僅供參考
 </footer>
 
 <script>
-/* ══ ETF 定義 ══ */
+/* ══ ETF 定義（精準替換為 image_8f1bb9.png 中的 5 支新自選股） ══ */
 const ETF_LIST = [
   { code:'0056',  name:'元大高股息',      issuer:'元大投信', color:'#2563eb',
     price:50.15, nav:50.15, eq:4.29, eqDate:'2026/05/29',
@@ -212,6 +212,32 @@ const ETF_LIST = [
     govUrl:'https://sitc.sinopac.com/newweb/sitcFundUnitTrend/page.do?stock_id=B5&tab_on=2',
     autoFetch: false
   },
+  /* ─── 以下為此次圖片精準新增之債券型自選 ─── */
+  { code:'00937B', name:'群益ESG投等債20+', issuer:'群益投信', color:'#0891b2',
+    price:15.82, nav:15.80, eq:0.12, eqDate:'2026/05/29',
+    govUrl:'https://www.capitalfund.com.tw/etf/product/detail/205/trend',
+    autoFetch: false
+  },
+  { code:'00981B', name:'富邦美債20年', issuer:'富邦投信', color:'#d97706',
+    price:14.90, nav:14.88, eq:0.00, eqDate:'2026/05/29',
+    govUrl:'https://websys.fsit.com.tw/FubonETF/Fund/Nav.aspx?stkId=00981B',
+    autoFetch: false
+  },
+  { code:'00981D', name:'富邦美債20年-配息', issuer:'富邦投信', color:'#dc2626',
+    price:14.92, nav:14.90, eq:0.00, eqDate:'2026/05/29',
+    govUrl:'https://websys.fsit.com.tw/FubonETF/Fund/Nav.aspx?stkId=00981D',
+    autoFetch: false
+  },
+  { code:'00984B', name:'群益20年美債', issuer:'群益投信', color:'#b91c1c',
+    price:14.95, nav:14.93, eq:0.00, eqDate:'2026/05/29',
+    govUrl:'https://www.capitalfund.com.tw/etf/product/detail/225/trend',
+    autoFetch: false
+  },
+  { code:'00984D', name:'群益20年美債-配息', issuer:'群益投信', color:'#1e1b4b',
+    price:14.96, nav:14.94, eq:0.00, eqDate:'2026/05/29',
+    govUrl:'https://www.capitalfund.com.tw/etf/product/detail/226/trend',
+    autoFetch: false
+  }
 ];
 
 /* ══ State ══ */
@@ -241,7 +267,7 @@ function saveData(){
   localStorage.setItem('etf-favs',JSON.stringify([...favs]));
 }
 
-/* ══ 自動抓取（元大） ══ */
+/* ══ 自動抓取（元大系列預留） ══ */
 async function autoFetch(code){
   const e=data.find(x=>x.code===code);
   if(!e||!e.autoFetch) return false;
@@ -256,8 +282,6 @@ async function autoFetch(code){
       e.nav = parseFloat(match[3]);
       return true;
     }
-    const m2 = html.match(/\(B\)收益平準金[^0-9]*?([\d.]+)/);
-    if(m2){ e.eq = parseFloat(m2[1]); return true; }
     return false;
   }catch(err){ return false; }
 }
@@ -267,7 +291,7 @@ async function fetchAll(){
   document.getElementById('btn-all').disabled=true;
   document.getElementById('all-icon').className='spin';
   document.getElementById('all-icon').textContent='↻';
-  setProg(0); setStatus('自動抓取元大資料…','loading');
+  setProg(0); setStatus('檢查並更新資料中…','loading');
 
   const autoList = data.filter(e=>e.autoFetch);
   if(autoList.length > 0) {
@@ -279,9 +303,9 @@ async function fetchAll(){
       autoList[i].errMsg = ok?'':'自動解析失敗';
       renderCard(autoList[i]);
     }
-    setStatus(`元大已更新 ✓ 其他投信請點擊「前往官網」查看並手動修改金額`,'ok');
+    setStatus(`更新完成 ✓ 請點擊「前往官網」查看並手動修改其他金額`,'ok');
   } else {
-    setStatus(`請點選下方「🌐 前往官網」開新分頁查看，並於看見數字後點選左方金額直接修改。`,'ok');
+    setStatus(`請點選卡片下方的「🌐 前往官網」開新分頁查看，並點選左方金額直接修改。`,'ok');
   }
 
   setProg(100);
