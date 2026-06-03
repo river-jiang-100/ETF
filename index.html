@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>ETF 收益平準金追蹤</title>
+<title>ETF 收益平準金與股價追蹤</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -63,12 +63,19 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 .etf-name{font-size:14px;font-weight:500}
 .etf-issuer{font-size:11px;color:var(--tx3);margin-top:2px}
 .card-prices{display:flex;gap:16px;align-items:center;margin-left:auto;flex-wrap:wrap}
-.price-blk{text-align:right}
+.price-blk{text-align:right;min-width:65px}
 .price-lbl{font-size:10px;color:var(--tx3);letter-spacing:.3px;margin-bottom:2px}
-.price-val{font-family:var(--mono);font-size:15px;font-weight:700}
+.price-val{font-family:var(--mono);font-size:15px;font-weight:700;cursor:pointer;border-bottom:1px dashed transparent}
+.price-val:hover{border-bottom-color:currentColor;color:var(--ac)}
 .fav-btn{background:none;border:none;font-size:20px;cursor:pointer;color:#d1d5db;transition:color .15s;padding:0 3px;line-height:1}
 .fav-btn.on{color:#f59e0b}
 .fav-btn:hover{color:#f59e0b}
+
+/* Mini Inline Edit for Price & NAV */
+.mini-edit{display:none;align-items:center;gap:3px;margin-top:2px}
+.mini-edit.show{display:flex}
+.mini-inp{width:65px;border:1px solid var(--ac);border-radius:4px;padding:2px 4px;font-size:13px;font-family:var(--mono);font-weight:700;text-align:right}
+.mini-btn{background:var(--ac);color:#fff;border:none;border-radius:3px;padding:2px 5px;font-size:10px;cursor:pointer}
 
 /* Equalization section */
 .eq-section{padding:10px 16px 11px 21px;border-top:1px solid var(--bdr);display:flex;align-items:center;gap:14px}
@@ -130,8 +137,8 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 
 <div class="hdr">
   <div class="hdr-left">
-    <h1>💰 ETF 收益平準金即時追蹤</h1>
-    <p id="hdr-ts">點「⚡ 自動抓取」→ 元大自動解析，其他投信點「🌐 前往官網」查看後點數字更新</p>
+    <h1>💰 ETF 收益平準金與股價追蹤</h1>
+    <p id="hdr-ts">💡 點擊「股價」、「預設淨值」或「平準金」數字，皆可直接進行手動快速修正！</p>
   </div>
   <button class="btn-fetch-all" id="btn-all" onclick="fetchAll()">
     <span id="all-icon">⚡</span> 自動抓取全部
@@ -169,7 +176,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 </footer>
 
 <script>
-/* ══ ETF 名單（已全面更新最新精準網址與發行商） ══ */
+/* ══ ETF 名單 ══ */
 const ETF_LIST = [
   { code:'0056',  name:'元大高股息',      issuer:'元大投信', color:'#2563eb',
     price:50.15, nav:50.15, eq:4.29, eqDate:'2026/05/29',
@@ -276,11 +283,14 @@ async function autoFetch(code){
     const r = await fetch(e.fetchUrl);
     const j = await r.json();
     const html = j.contents||'';
+    // 解析元大格式：日期 | 申購買回代號 | 收益平準金 | 市價折溢價 | 預估淨值
     const match = html.match(/(\d{4}\/\d{2}\/\d{2})[^|]*\|\s*[\d.]+\s*\|\s*([\d.]+)\s*\|\s*[\d.-]+\s*\|\s*([\d.]+)/);
     if(match){
       e.eqDate = match[1];
       e.eq = parseFloat(match[2]);
       e.nav = parseFloat(match[3]);
+      // 由於元大抓取頁面主要提供淨值與平準金，若無獨立市價欄位，我們預設讓市價暫時貼近淨值，或由用戶微調
+      e.price = e.nav; 
       return true;
     }
     return false;
@@ -297,22 +307,22 @@ async function fetchAll(){
   if(autoList.length > 0) {
     for(let i=0; i<autoList.length; i++){
       setProg(Math.round((i/autoList.length)*50));
-      setStatus(`(${i+1}/${autoList.length}) 自動抓取 ${autoList[i].code}…`,'loading');
+      setStatus(`(1/1) 自動抓取 ${autoList[i].code}…`,'loading');
       const ok = await autoFetch(autoList[i].code);
       autoList[i].status = ok?'ok':'err';
       autoList[i].errMsg = ok?'':'自動解析失敗';
       renderCard(autoList[i]);
     }
-    setStatus(`元大更新完成 ✓ 請點擊其他投信的「🌐 前往官網」查看並手動修正金額`,'ok');
+    setStatus(`元大更新完成 ✓ 請點擊其他投信的「🌐 前往官網」查看並手動修正數字`,'ok');
   } else {
-    setStatus(`請點選卡片下方的「🌐 前往官網」開新分頁查看，並點選左方金額直接修改。`,'ok');
+    setStatus(`請點選卡片下方的「🌐 前往官網」開新分頁查看修改。`,'ok');
   }
 
   setProg(100);
   setTimeout(hideProg, 1000);
   saveData(); updateStats();
   const ts=new Date().toLocaleString('zh-TW');
-  document.getElementById('hdr-ts').textContent=`最後更新：${ts}`;
+  document.getElementById('hdr-ts').textContent=`最後更新：${ts} (點擊卡片上任一數字可直接修改)`;
   document.getElementById('btn-all').disabled=false;
   document.getElementById('all-icon').className='';
   document.getElementById('all-icon').textContent='⚡';
@@ -327,6 +337,28 @@ async function fetchOne(code){
   saveData(); updateStats(); renderCard(e);
 }
 
+/* ══ 價格與淨值微調編輯 ══ */
+function startMiniEdit(code, type){
+  document.getElementById(`lbl-${type}-${code}`).style.display='none';
+  const box = document.getElementById(`box-${type}-${code}`);
+  box.classList.add('show');
+  const inp = document.getElementById(`inp-${type}-${code}`);
+  inp.focus(); inp.select();
+}
+function saveMiniEdit(code, type){
+  const inp = document.getElementById(`inp-${type}-${code}`);
+  const v = parseFloat(inp.value);
+  if(isNaN(v)||v<=0) return;
+  const e=data.find(x=>x.code===code);if(!e)return;
+  e[type] = v;
+  e.eqDate = new Date().toLocaleDateString('zh-TW');
+  saveData(); updateStats(); renderCard(e);
+}
+function cancelMiniEdit(code, type){
+  renderCard(data.find(x=>x.code===code));
+}
+
+/* ══ 平準金主編輯 ══ */
 function startEdit(code){
   const e=data.find(x=>x.code===code);if(!e)return;
   document.getElementById('en-'+code).style.display='none';
@@ -347,6 +379,7 @@ function saveEdit(code){
 function cancelEdit(code){
   renderCard(data.find(x=>x.code===code));
 }
+
 function toggleFav(code){
   const e=data.find(x=>x.code===code);if(!e)return;
   e.fav=!e.fav; if(e.fav)favs.add(code);else favs.delete(code);
@@ -396,17 +429,19 @@ function renderCard(e){
 }
 
 function buildCard(e){
-  const eq=e.eq||0, nav=e.nav;
+  const eq=e.eq||0, nav=e.nav||0, price=e.price||0;
   const eqPct=nav?(eq/nav*100):null;
   const barW=Math.min((eq/6)*100,100);
   const fillCls=eq>=2?'fill-high':eq>=0.5?'fill-mid':'fill-low';
   const eqColor=eq>=2?'var(--dn)':eq>=0.5?'var(--warn)':'var(--up)';
   const badgeBg=eq>=2?'#fef2f2':eq>=0.5?'#fffbeb':'#f0fdf4';
-  const sp=nav?+(e.price-nav).toFixed(2):null;
-  const spPct=sp&&nav?+(sp/nav*100).toFixed(2):null;
-  const spCl=spPct==null?'':spPct>0?'style="color:var(--up)"':'style="color:var(--dn)"';
+  
+  // 折溢價計算：(價 - 淨) / 淨 * 100
+  const spPct = nav ? ((price - nav) / nav * 100) : 0;
+  const spCl = spPct >= 0 ? 'style="color:var(--up)"' : 'style="color:var(--dn)"';
+  
   const stMap={idle:'idle',loading:'loading',ok:'ok',err:'err'};
-  const stMsg={idle:'可點擊金額手動更新',loading:'自動抓取中…',ok:'已更新 ✓',err:e.errMsg||'無法解析'};
+  const stMsg={idle:'數據可點擊修正',loading:'自動抓取中…',ok:'已更新 ✓',err:e.errMsg||'無法解析'};
 
   return `<div class="etf-card" id="c-${e.code}">
     <div class="card-top">
@@ -417,9 +452,36 @@ function buildCard(e){
           <div class="etf-name">${e.name}</div>
           <div class="etf-issuer">${e.issuer}${e.autoFetch?' <span style="font-size:10px;background:#dbeafe;color:#1d4ed8;padding:1px 5px;border-radius:4px;margin-left:3px">自動</span>':' <span style="font-size:10px;background:#fef9c3;color:#854d0e;padding:1px 5px;border-radius:4px;margin-left:3px">手動</span>'}</div>
         </div>
+        
         <div class="card-prices">
-          ${nav?`<div class="price-blk"><div class="price-lbl">預設淨值</div><div class="price-val">${nav.toFixed(2)}</div></div>`:''}
-          ${spPct!=null?`<div class="price-blk"><div class="price-lbl">折溢價</div><div class="price-val" ${spCl}>${spPct>=0?'+':''}${spPct.toFixed(2)}%</div></div>`:''}
+          <!-- 收盤股價區塊 -->
+          <div class="price-blk">
+            <div class="price-lbl">收盤股價</div>
+            <div class="price-val" id="lbl-price-${e.code}" onclick="startMiniEdit('${e.code}','price')" title="點擊修改股價">${price.toFixed(2)}</div>
+            <div class="mini-edit" id="box-price-${e.code}">
+              <input class="mini-inp" type="number" step="0.01" id="inp-price-${e.code}" value="${price.toFixed(2)}"
+                onkeydown="if(event.key==='Enter')saveMiniEdit('${e.code}','price');if(event.key==='Escape')cancelMiniEdit('${e.code}','price')">
+              <button class="mini-btn" onclick="saveMiniEdit('${e.code}','price')">✓</button>
+            </div>
+          </div>
+          
+          <!-- 預估淨值區塊 -->
+          <div class="price-blk">
+            <div class="price-lbl">預設淨值</div>
+            <div class="price-val" id="lbl-nav-${e.code}" onclick="startMiniEdit('${e.code}','nav')" title="點擊修改淨值">${nav.toFixed(2)}</div>
+            <div class="mini-edit" id="box-nav-${e.code}">
+              <input class="mini-inp" type="number" step="0.01" id="inp-nav-${e.code}" value="${nav.toFixed(2)}"
+                onkeydown="if(event.key==='Enter')saveMiniEdit('${e.code}','nav');if(event.key==='Escape')cancelMiniEdit('${e.code}','nav')">
+              <button class="mini-btn" onclick="saveMiniEdit('${e.code}','nav')">✓</button>
+            </div>
+          </div>
+          
+          <!-- 折溢價區塊 (由系統自動連動計算) -->
+          <div class="price-blk">
+            <div class="price-lbl">即時折溢價</div>
+            <div class="price-val" ${spCl} style="cursor:default; border-bottom:none;">${spPct >= 0 ? '+' : ''}${spPct.toFixed(2)}%</div>
+          </div>
+          
           <button class="fav-btn${e.fav?' on':''}" onclick="toggleFav('${e.code}')">${e.fav?'★':'☆'}</button>
         </div>
       </div>
@@ -429,7 +491,7 @@ function buildCard(e){
       <div class="eq-left">
         <div class="eq-lbl">收益平準金 (元/單位)</div>
         <div id="en-${e.code}">
-          <span class="eq-num" style="color:${eqColor}" onclick="startEdit('${e.code}')" title="點擊修改">${eq.toFixed(2)}</span>
+          <span class="eq-num" style="color:${eqColor}" onclick="startEdit('${e.code}')" title="點擊修改平準金">${eq.toFixed(2)}</span>
           <span class="eq-unit"> 元</span>
         </div>
         <div class="eq-edit-row" id="er-${e.code}">
@@ -438,8 +500,7 @@ function buildCard(e){
           <button class="btn-ok" onclick="saveEdit('${e.code}')">✓</button>
           <button class="btn-cancel" onclick="cancelEdit('${e.code}')">✕</button>
         </div>
-        <div class="eq-date">資料日期：${e.eqDate||'—'}</div>
-        <div class="edit-hint" style="margin-top:3px">👆 點數字可直接修改</div>
+        <div class="eq-date">更新日期：${e.eqDate||'—'}</div>
       </div>
       <div class="eq-right">
         <div class="eq-info">
