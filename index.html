@@ -169,7 +169,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 </footer>
 
 <script>
-/* ══ ETF 13檔完整名單定義 ══ */
+/* ══ ETF 名單（已更新 00937B 網址） ══ */
 const ETF_LIST = [
   { code:'0056',  name:'元大高股息',      issuer:'元大投信', color:'#2563eb',
     price:50.15, nav:50.15, eq:4.29, eqDate:'2026/05/29',
@@ -212,10 +212,10 @@ const ETF_LIST = [
     govUrl:'https://sitc.sinopac.com/newweb/sitcFundUnitTrend/page.do?stock_id=B5&tab_on=2',
     autoFetch: false
   },
-  /* ─── 債券型追加 ─── */
+  /* ─── 債券型名單（00937B已修正） ─── */
   { code:'00937B', name:'群益ESG投等債20+', issuer:'群益投信', color:'#0284c7',
     price:15.82, nav:15.80, eq:0.12, eqDate:'2026/05/29',
-    govUrl:'https://www.capitalfund.com.tw/etf/product/detail/205/trend',
+    govUrl:'https://www.capitalfund.com.tw/etf/product/detail/378/trend',
     autoFetch: false
   },
   { code:'00981B', name:'富邦美債20年', issuer:'富邦投信', color:'#4f46e5',
@@ -240,7 +240,7 @@ const ETF_LIST = [
   }
 ];
 
-/* ══ State ══ */
+/* ══ State 與核心邏輯（不變） ══ */
 let data = [], favs = new Set(), curTab = 'all';
 
 (function init(){
@@ -269,7 +269,6 @@ function saveData(){
   localStorage.setItem('etf-favs',JSON.stringify([...favs]));
 }
 
-/* ══ 自動抓取邏輯（元大） ══ */
 async function autoFetch(code){
   const e=data.find(x=>x.code===code);
   if(!e||!e.autoFetch) return false;
@@ -288,7 +287,6 @@ async function autoFetch(code){
   }catch(err){ return false; }
 }
 
-/* ══ 抓取全部 ══ */
 async function fetchAll(){
   document.getElementById('btn-all').disabled=true;
   document.getElementById('all-icon').className='spin';
@@ -320,7 +318,6 @@ async function fetchAll(){
   document.getElementById('all-icon').textContent='⚡';
 }
 
-/* ══ 單獨重新抓取 ══ */
 async function fetchOne(code){
   const e=data.find(x=>x.code===code);if(!e)return;
   e.status='loading'; renderCard(e);
@@ -330,7 +327,6 @@ async function fetchOne(code){
   saveData(); updateStats(); renderCard(e);
 }
 
-/* ══ 數字點擊修改功能 ══ */
 function startEdit(code){
   const e=data.find(x=>x.code===code);if(!e)return;
   document.getElementById('en-'+code).style.display='none';
@@ -384,7 +380,6 @@ function updateStats(){
   if(favEl) favEl.textContent=favs.size;
 }
 
-/* ══ Render 畫面渲染 ══ */
 function render(){
   let list=[...data];
   if(curTab==='fav')list=list.filter(e=>e.fav);
