@@ -169,7 +169,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 </footer>
 
 <script>
-/* ══ ETF 名單（已更新 00937B 網址） ══ */
+/* ══ ETF 名單（已全面更新最新精準網址與發行商） ══ */
 const ETF_LIST = [
   { code:'0056',  name:'元大高股息',      issuer:'元大投信', color:'#2563eb',
     price:50.15, nav:50.15, eq:4.29, eqDate:'2026/05/29',
@@ -212,7 +212,7 @@ const ETF_LIST = [
     govUrl:'https://sitc.sinopac.com/newweb/sitcFundUnitTrend/page.do?stock_id=B5&tab_on=2',
     autoFetch: false
   },
-  /* ─── 債券型名單（00937B已修正） ─── */
+  /* ─── 債券與主動型型名單 ─── */
   { code:'00937B', name:'群益ESG投等債20+', issuer:'群益投信', color:'#0284c7',
     price:15.82, nav:15.80, eq:0.12, eqDate:'2026/05/29',
     govUrl:'https://www.capitalfund.com.tw/etf/product/detail/378/trend',
@@ -220,27 +220,27 @@ const ETF_LIST = [
   },
   { code:'00981B', name:'富邦美債20年', issuer:'富邦投信', color:'#4f46e5',
     price:14.90, nav:14.88, eq:0.00, eqDate:'2026/05/29',
-    govUrl:'https://websys.fsit.com.tw/FubonETF/Fund/Nav.aspx?stkId=00981B',
+    govUrl:'https://www.fsitc.com.tw/FundDetail.aspx?ID=177#TabLinkdivEditTab2',
     autoFetch: false
   },
-  { code:'00981D', name:'富邦美債20年-配息', issuer:'富邦投信', color:'#9333ea',
+  { code:'00981D', name:'富邦美債20年-配息', issuer:'中信投信', color:'#9333ea',
     price:14.92, nav:14.90, eq:0.00, eqDate:'2026/05/29',
-    govUrl:'https://websys.fsit.com.tw/FubonETF/Fund/Nav.aspx?stkId=00981D',
+    govUrl:'https://www.ctbcinvestments.com.tw/Etf/00606159/Trend',
     autoFetch: false
   },
-  { code:'00984B', name:'群益20年美債', issuer:'群益投信', color:'#ea580c',
+  { code:'00984B', name:'群益20年美債', issuer:'大華銀投信', color:'#ea580c',
     price:14.95, nav:14.93, eq:0.00, eqDate:'2026/05/29',
-    govUrl:'https://www.capitalfund.com.tw/etf/product/detail/225/trend',
+    govUrl:'https://www.uobam.com.tw/fund/etf/00580854',
     autoFetch: false
   },
-  { code:'00984D', name:'群益20年美債-配息', issuer:'群益投信', color:'#be123c',
+  { code:'00984D', name:'群益20年美債-配息', issuer:'聯博投信', color:'#be123c',
     price:14.96, nav:14.94, eq:0.00, eqDate:'2026/05/29',
-    govUrl:'https://www.capitalfund.com.tw/etf/product/detail/226/trend',
+    govUrl:'https://www.abfunds.com.tw/zh-tw/etf/active/fixed-income/abitl-select-global-high-yield-active-etf.-.TW00000984D0.html',
     autoFetch: false
   }
 ];
 
-/* ══ State 與核心邏輯（不變） ══ */
+/* ══ State 與核心邏輯 ══ */
 let data = [], favs = new Set(), curTab = 'all';
 
 (function init(){
