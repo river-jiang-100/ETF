@@ -60,7 +60,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 .card-body{flex:1;padding:13px 16px;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
 .etf-code{font-family:var(--mono);font-size:24px;font-weight:700;color:var(--ac);min-width:74px}
 .etf-meta{flex:1;min-width:130px}
-.etf-name{font-size:14px;font-weight:500}
+.etf-name{font-size:14px;font-weight:500;line-height:1.4}
 .etf-issuer{font-size:11px;color:var(--tx3);margin-top:2px}
 .card-prices{display:flex;gap:16px;align-items:center;margin-left:auto;flex-wrap:wrap}
 .price-blk{text-align:right;min-width:65px}
@@ -176,7 +176,7 @@ body{font-family:var(--sans);background:var(--bg);color:var(--tx);min-height:100
 </footer>
 
 <script>
-/* ══ ETF 名單 ══ */
+/* ══ ETF 名單（已全面更新為最新官方名稱與對應投信） ══ */
 const ETF_LIST = [
   { code:'0056',  name:'元大高股息',      issuer:'元大投信', color:'#2563eb',
     price:50.15, nav:50.15, eq:4.29, eqDate:'2026/05/29',
@@ -225,22 +225,22 @@ const ETF_LIST = [
     govUrl:'https://www.capitalfund.com.tw/etf/product/detail/378/trend',
     autoFetch: false
   },
-  { code:'00981B', name:'富邦美債20年', issuer:'富邦投信', color:'#4f46e5',
+  { code:'00981B', name:'第一金美元優選收益非投資等級債券ETF', issuer:'第一金投信', color:'#4f46e5',
     price:14.90, nav:14.88, eq:0.00, eqDate:'2026/05/29',
     govUrl:'https://www.fsitc.com.tw/FundDetail.aspx?ID=177#TabLinkdivEditTab2',
     autoFetch: false
   },
-  { code:'00981D', name:'富邦美債20年-配息', issuer:'中信投信', color:'#9333ea',
+  { code:'00981D', name:'中國信託價值策略非投資等級債券主動式ETF', issuer:'中信投信', color:'#9333ea',
     price:14.92, nav:14.90, eq:0.00, eqDate:'2026/05/29',
     govUrl:'https://www.ctbcinvestments.com.tw/Etf/00606159/Trend',
     autoFetch: false
   },
-  { code:'00984B', name:'群益20年美債', issuer:'大華銀投信', color:'#ea580c',
+  { code:'00984B', name:'大華優利美A債15', issuer:'大華銀投信', color:'#ea580c',
     price:14.95, nav:14.93, eq:0.00, eqDate:'2026/05/29',
     govUrl:'https://www.uobam.com.tw/fund/etf/00580854',
     autoFetch: false
   },
-  { code:'00984D', name:'群益20年美債-配息', issuer:'聯博投信', color:'#be123c',
+  { code:'00984D', name:'聯博優選全球非投資等級債券主動式ETF', issuer:'聯博投信', color:'#be123c',
     price:14.96, nav:14.94, eq:0.00, eqDate:'2026/05/29',
     govUrl:'https://www.abfunds.com.tw/zh-tw/etf/active/fixed-income/abitl-select-global-high-yield-active-etf.-.TW00000984D0.html',
     autoFetch: false
@@ -256,6 +256,7 @@ let data = [], favs = new Set(), curTab = 'all';
     favs = new Set(JSON.parse(localStorage.getItem('etf-favs')||'[]'));
     data = ETF_LIST.map(e=>{
       const s=sv[e.code]||{};
+      // 將儲存的自訂數據帶入，但始終保持最新的名稱與發行商定義
       return{...e, eq:s.eq??e.eq, eqDate:s.eqDate||e.eqDate,
         nav:s.nav??e.nav, price:s.price??e.price,
         fav:favs.has(e.code), status:'idle', errMsg:''};
@@ -283,13 +284,11 @@ async function autoFetch(code){
     const r = await fetch(e.fetchUrl);
     const j = await r.json();
     const html = j.contents||'';
-    // 解析元大格式：日期 | 申購買回代號 | 收益平準金 | 市價折溢價 | 預估淨值
     const match = html.match(/(\d{4}\/\d{2}\/\d{2})[^|]*\|\s*[\d.]+\s*\|\s*([\d.]+)\s*\|\s*[\d.-]+\s*\|\s*([\d.]+)/);
     if(match){
       e.eqDate = match[1];
       e.eq = parseFloat(match[2]);
       e.nav = parseFloat(match[3]);
-      // 由於元大抓取頁面主要提供淨值與平準金，若無獨立市價欄位，我們預設讓市價暫時貼近淨值，或由用戶微調
       e.price = e.nav; 
       return true;
     }
@@ -436,7 +435,6 @@ function buildCard(e){
   const eqColor=eq>=2?'var(--dn)':eq>=0.5?'var(--warn)':'var(--up)';
   const badgeBg=eq>=2?'#fef2f2':eq>=0.5?'#fffbeb':'#f0fdf4';
   
-  // 折溢價計算：(價 - 淨) / 淨 * 100
   const spPct = nav ? ((price - nav) / nav * 100) : 0;
   const spCl = spPct >= 0 ? 'style="color:var(--up)"' : 'style="color:var(--dn)"';
   
@@ -476,7 +474,7 @@ function buildCard(e){
             </div>
           </div>
           
-          <!-- 折溢價區塊 (由系統自動連動計算) -->
+          <!-- 折溢價區塊 -->
           <div class="price-blk">
             <div class="price-lbl">即時折溢價</div>
             <div class="price-val" ${spCl} style="cursor:default; border-bottom:none;">${spPct >= 0 ? '+' : ''}${spPct.toFixed(2)}%</div>
